@@ -4,6 +4,8 @@
 
 This is a cmake setup that loads glfw, opengl, stb_image, stb_truetype and a custom 2d library. It works both on windows and linux.
 
+![](https://github.com/meemknight/photos/blob/master/cmakeSetup1.png)
+---
 
 # Configurations:
 
