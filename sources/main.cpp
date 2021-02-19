@@ -27,7 +27,7 @@ int main()
 #endif
 
 
-	permaAssertComment(0, "test");
+	//permaAssertComment(0, "test");
 
 
 	if (!glfwInit())
