@@ -432,10 +432,11 @@ void main()
 	{
 		std::ifstream fileFont(file, std::ios::binary);
 
+		//todo remove strcat_s
 		if (!fileFont.is_open())
 		{
 			char c[256] = { 0 };
-			strcat_s(c, "error openning: ");
+			strcat(c, "error openning: ");
 			strcat_s(c + strlen(c), 200, file);
 			errorFunc(c);
 			return;

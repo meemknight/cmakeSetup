@@ -1,10 +1,9 @@
 #ifndef TOOLS_H_INCLUDE
 #define TOOLS_H_INCLUDE
 
-#define INTERNAL_BUILD 1	//this includes things like debugg checking replay and hot code reloading
-							//when this is 0 the code will build for shipping mode, it will disable
-							//debugging tools like input record, custom memory allocation adress space
-							//and the option to ignore an assert
+#define INTERNAL_BUILD 1	//when internal build is true and an assertion is hit, you have the option to debug or ignore
+							//when internal build if false and an asertion is hit, the error is reported and the program 
+							//closes
 
 
 #include <signal.h>
@@ -84,7 +83,7 @@
 			"Expresion:\n"
 			"%s\n\n"
 			"Comment:\n"
-			"%s",
+			"%s"
 			"\n\nPress retry to debug.",
 			file_name,
 			line_number,
@@ -168,12 +167,12 @@
 	}
 
 
-	#define winAssert(expression) (void)(											\
+	#define permaAssert(expression) (void)(											\
 					(!!(expression)) ||												\
 					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__)), 0)	\
 				)
 
-	#define winAssertComment(expression, comment) (void)(								\
+	#define permaAssertComment(expression, comment) (void)(								\
 					(!!(expression)) ||														\
 					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__)), 0, comment)	\
 				)
