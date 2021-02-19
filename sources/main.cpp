@@ -27,13 +27,8 @@ int main()
 #endif
 
 
-	//permaAssertComment(0, "test");
+	permaAssertComment(glfwInit(), "err initializing glfw");
 
-
-	if (!glfwInit())
-	{
-		std::cout << "err initializing glfw";
-	}
 
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
@@ -43,7 +38,7 @@ int main()
 	glfwMakeContextCurrent(wind);
 	glfwSwapInterval(1);
 
-	gladLoadGL();
+	permaAssertComment(gladLoadGL(), "err initializing glad");
 	
 	gl2d::init();
 	
