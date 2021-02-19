@@ -5,6 +5,7 @@
 #include "gl2d/gl2d.h"
 #include <iostream>
 #include <ctime>
+#include "tools.h"
 
 #ifdef PLATFORM_WIN32
 #include <Windows.h>
@@ -12,6 +13,7 @@
 
 #undef min
 #undef max
+
 
 int main()
 {
@@ -23,6 +25,9 @@ int main()
 	freopen("conout$", "w", stderr);
 	std::cout.sync_with_stdio();
 #endif
+
+
+	permaAssertComment(0, "test");
 
 
 	if (!glfwInit())
