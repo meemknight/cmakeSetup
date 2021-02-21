@@ -26,7 +26,6 @@ int main()
 	std::cout.sync_with_stdio();
 #endif
 
-
 	permaAssertComment(glfwInit(), "err initializing glfw");
 
 
