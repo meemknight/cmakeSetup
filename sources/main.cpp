@@ -19,11 +19,15 @@ int main()
 {
 
 #ifdef PLATFORM_WIN32
+#ifdef _MSC_VER 
+#if INTERNAL_BUILD
 	AllocConsole();
 	freopen("conin$", "r", stdin);
 	freopen("conout$", "w", stdout);
 	freopen("conout$", "w", stderr);
 	std::cout.sync_with_stdio();
+#endif
+#endif
 #endif
 
 	permaAssertComment(glfwInit(), "err initializing glfw");
@@ -76,4 +80,9 @@ int main()
 		glfwSwapBuffers(wind);
 		glfwPollEvents();
 	}
+
+
+	//if you want the console to stay after closing the window
+	//std::cin.clear();
+	//std::cin.get();
 }
