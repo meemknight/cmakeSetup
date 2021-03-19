@@ -6,6 +6,8 @@
 #include <iostream>
 #include <ctime>
 #include "tools.h"
+#include "config.h"
+#include <raudio.h>
 
 #ifdef PLATFORM_WIN32
 #include <Windows.h>
@@ -52,6 +54,20 @@ int main()
 	gl2d::Font font(RESOURCES_PATH "roboto_black.ttf");
 	gl2d::Texture texture(RESOURCES_PATH "test.jpg");
 
+#pragma region audio
+	InitAudioDevice();
+
+	Sound fxOgg = LoadSound(RESOURCES_PATH "target.ogg");
+
+	PlaySound(fxOgg);
+
+	
+
+#pragma endregion
+
+
+
+
 	long lastTime = clock();
 
 	while (!glfwWindowShouldClose(wind))
@@ -75,6 +91,7 @@ int main()
 		renderer.renderRectangle({ 10,10, 100, 100 }, colors, {}, 30);
 
 		renderer.renderText({ 100,100 }, "Hello", font, Colors_White);
+
 
 		renderer.flush();
 		glfwSwapBuffers(wind);
