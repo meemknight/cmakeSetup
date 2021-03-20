@@ -39,7 +39,7 @@ if(MSVC) # If using the VS compiler...
 endif()
 
 if(WIN32)
-	target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC PLATFORM_WIN32="1") 
+	target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC _WIN32) 
   
 endif()
 

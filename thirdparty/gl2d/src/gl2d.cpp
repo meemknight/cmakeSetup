@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////
-//opengl2Dlib.cpp				1.1
+//opengl2Dlib.cpp				1.2
 //Copyright(c) 2020 Luta Vlad
 //https://github.com/meemknight/gl2d
 //////////////////////////////////////////////////
@@ -7,20 +7,26 @@
 
 //	todo
 //
-//	simd macro
 //	investigate more simdize functions
+//	mabe check at runtime cpu features
 //	check min gl version
 //	add particle demo
 //	mabe add a flag to load textures in pixelated modes
 //	add linux support
+//	remake some functions
 //
 
 
-#include "gl2d/gl2d.h"
+#include <gl2d/gl2d.h>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include <iostream>
+
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4244 4305 4267 4996 4018)
+#endif
 
 #undef max
 
@@ -129,7 +135,7 @@ void main()
 
 	void defaultErrorFunc(const char *msg)
 	{
-		std::cout << msg << "\n";
+
 	}
 
 	errorFuncType *setErrorFuncCallback(errorFuncType *newFunc)
@@ -290,17 +296,17 @@ void main()
 
 	bool setVsync(bool b)
 	{
+		return false;
 		//todo linux suport
-		//if (extensions.WGL_EXT_swap_control_ext)
-		//{
-		//	wglSwapIntervalEXT(b);
-		//	return true;
-		//}
-		//else
-		//{
-		//	return false;
-		//}
-		return 0;
+		if (extensions.WGL_EXT_swap_control_ext)
+		{
+			//wglSwapIntervalEXT(b);
+			//return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	glm::vec2 rotateAroundPoint(glm::vec2 vec, glm::vec2 point, const float degrees)
@@ -432,12 +438,11 @@ void main()
 	{
 		std::ifstream fileFont(file, std::ios::binary);
 
-		//todo remove strcat_s
 		if (!fileFont.is_open())
 		{
-			char c[256] = { 0 };
+			char c[300] = { 0 };
 			strcat(c, "error openning: ");
-			strcat_s(c + strlen(c), 200, file);
+			strcat(c + strlen(c), file);
 			errorFunc(c);
 			return;
 		}
@@ -554,7 +559,7 @@ void main()
 		glEnable(GL_MULTISAMPLE);
 		glEnable(GL_LINE_SMOOTH);
 		glEnable(GL_POLYGON_SMOOTH);
-		//glEnable(GL_SAMPLE_SHADING);
+		glEnable(GL_SAMPLE_SHADING);
 
 		glDisable(GL_DEPTH_TEST);
 
@@ -1401,7 +1406,7 @@ void main()
 		};
 
 
-		unsigned char *newData = new unsigned char[newW * newH * 4]{0};
+		unsigned char *newData = new unsigned char[newW * newH * 4]{};
 
 		auto getNew = [newData, newW](int x, int y, int c)
 		{
@@ -1532,9 +1537,9 @@ void main()
 
 		if (!file.is_open())
 		{
-			char c[256] = { 0 };
-			strcat_s(c, "error openning: ");
-			strcat_s(c + strlen(c), 200, fileName);
+			char c[300] = { 0 };
+			strcat(c, "error openning: ");
+			strcat(c + strlen(c), fileName);
 			errorFunc(c);
 			return;
 		}
@@ -1559,9 +1564,9 @@ void main()
 
 		if (!file.is_open())
 		{
-			char c[256] = { 0 };
-			strcat_s(c, "error openning: ");
-			strcat_s(c + strlen(c), 200, fileName);
+			char c[300] = { 0 };
+			strcat(c, "error openning: ");
+			strcat(c + strlen(c), fileName);
 			errorFunc(c);
 			return;
 		}
@@ -2432,3 +2437,7 @@ void main()
 	}
 
 }
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif

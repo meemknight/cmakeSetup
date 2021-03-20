@@ -9,7 +9,7 @@
 #include "config.h"
 #include <raudio.h>
 
-#ifdef PLATFORM_WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #endif
 
@@ -20,7 +20,7 @@
 int main()
 {
 
-#ifdef PLATFORM_WIN32
+#ifdef _WIN32
 #ifdef _MSC_VER 
 #if INTERNAL_BUILD
 	AllocConsole();
@@ -64,7 +64,6 @@ int main()
 	
 
 #pragma endregion
-
 
 
 

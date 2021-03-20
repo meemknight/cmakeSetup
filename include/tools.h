@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 
-#ifdef PLATFORM_WIN32
+#ifdef _WIN32
 
 	#include <Windows.h>
 	
