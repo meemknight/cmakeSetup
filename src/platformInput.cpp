@@ -133,9 +133,9 @@ void platform::internal::updateAllButtons()
 				controllerButtons.RStick.x = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
 				controllerButtons.RStick.y = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
 			
+				break;
 			}
 
-			break;
 		}
 
 	}
