@@ -1,5 +1,6 @@
 #pragma once
-
+#include <GLFW/glfw3.h>
+#include "gameLayer.h"
 
 namespace platform 
 {
@@ -8,6 +9,7 @@ namespace platform
 		char pressed = 0;
 		char held = 0;
 		char released = 0;
+		char newState = -1; // this can be -1
 
 		enum
 		{
@@ -26,10 +28,13 @@ namespace platform
 
 		static constexpr int buttonValues[BUTTONS_COUNT] =
 		{
-			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
-			'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-			VK_SPACE, VK_RETURN, VK_ESCAPE, VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT
+			GLFW_KEY_A, GLFW_KEY_B, GLFW_KEY_C, GLFW_KEY_D, GLFW_KEY_E, GLFW_KEY_F, GLFW_KEY_G,
+			GLFW_KEY_H, GLFW_KEY_I, GLFW_KEY_J, GLFW_KEY_K, GLFW_KEY_L, GLFW_KEY_M, GLFW_KEY_N,
+			GLFW_KEY_O, GLFW_KEY_P, GLFW_KEY_Q, GLFW_KEY_R, GLFW_KEY_S, GLFW_KEY_T, GLFW_KEY_U, 
+			GLFW_KEY_V, GLFW_KEY_W, GLFW_KEY_X, GLFW_KEY_Y, GLFW_KEY_Z,
+			GLFW_KEY_0, GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5, GLFW_KEY_6,
+			GLFW_KEY_7, GLFW_KEY_8, GLFW_KEY_9,
+			GLFW_KEY_SPACE, GLFW_KEY_ENTER, GLFW_KEY_ESCAPE, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT
 		};
 
 		void merge(const Button &b)
@@ -40,34 +45,7 @@ namespace platform
 		}
 	};
 
-	inline void processEventButton(Button &b, bool newState)
-	{
-
-		if (newState)
-		{
-			if (b.held)
-			{
-				b.pressed = false;
-			}
-			else
-			{
-				b.pressed = true;
-			}
-
-			b.held = true;
-			b.released = false;
-		}
-		else
-		{
-			b.held = false;
-			b.pressed = false;
-			b.released = true;
-		}
-
-
-	}
-
-
+	
 	//Button::key
 	int isKeyHeld(int key);
 
@@ -75,5 +53,62 @@ namespace platform
 
 	int isKeyReleased(int key);
 
+	int isLMousePressed();
+	int isRMousePressed();
+
+	int isLMouseReleased();
+	int isRMouseReleased();
+
+	int isLMouseHeld();
+	int isRMouseHeld();
+
+	namespace internal
+	{
+
+		void setButtonState(int button, int newState);
+
+		void setLeftMouseState(int newState);
+		void setRightMouseState(int newState);
+
+		inline void processEventButton(Button &b, bool newState)
+		{
+			b.newState = newState;
+		}
+
+		inline void updateButton(Button &b)
+		{
+			if (b.newState == 1)
+			{
+				if (b.held)
+				{
+					b.pressed = false;
+				}
+				else
+				{
+					b.pressed = true;
+				}
+
+				b.held = true;
+				b.released = false;
+			}
+			else if(b.newState == 0)
+			{
+				b.held = false;
+				b.pressed = false;
+				b.released = true;
+			}else
+			{
+				b.pressed = false;
+				b.released = false;
+			}
+
+			b.newState = -1;
+		}
+
+		inline void resetButtonToZero(Button &b);
+
+		void updateAllButtons();
+		void resetInputsToZero();
+	};
 
 };
