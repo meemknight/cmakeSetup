@@ -45,6 +45,59 @@ namespace platform
 		}
 	};
 
+	namespace internal
+	{
+		inline void resetButtonToZero(Button &b);
+	}
+
+	struct ControllerButtons
+	{
+		enum Buttons
+		{
+		A = GLFW_GAMEPAD_BUTTON_A,           
+		B = GLFW_GAMEPAD_BUTTON_B,           
+		X = GLFW_GAMEPAD_BUTTON_X,           
+		Y = GLFW_GAMEPAD_BUTTON_Y,           
+		LBumper = GLFW_GAMEPAD_BUTTON_LEFT_BUMPER, 
+		RBumper = GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER,
+		Back = GLFW_GAMEPAD_BUTTON_BACK,
+		Start = GLFW_GAMEPAD_BUTTON_START,       
+		Guide = GLFW_GAMEPAD_BUTTON_GUIDE,      
+		LThumb = GLFW_GAMEPAD_BUTTON_LEFT_THUMB,  
+		Rthumb = GLFW_GAMEPAD_BUTTON_RIGHT_THUMB, 
+		Up = GLFW_GAMEPAD_BUTTON_DPAD_UP,   
+		Right = GLFW_GAMEPAD_BUTTON_DPAD_RIGHT,  
+		Down = GLFW_GAMEPAD_BUTTON_DPAD_DOWN, 
+		Left = GLFW_GAMEPAD_BUTTON_DPAD_LEFT,  
+		};
+
+		Button buttons[GLFW_GAMEPAD_BUTTON_LAST + 1];
+
+		float LT;
+		float RT;
+
+		struct
+		{
+			float x, y;
+		}LStick, RStick;
+
+		void setAllToZero()
+		{
+			
+			for(int i=0; i< GLFW_GAMEPAD_BUTTON_LAST+1; i++)
+			{
+				internal::resetButtonToZero(buttons[i]);
+			}
+
+			LT = 0;
+			RT = 0;
+
+			LStick = {};
+			RStick = {};
+
+		}
+	};
+
 	
 	//Button::key
 	int isKeyHeld(int key);
@@ -61,6 +114,8 @@ namespace platform
 
 	int isLMouseHeld();
 	int isRMouseHeld();
+
+	ControllerButtons getControllerButtons();
 
 	namespace internal
 	{
@@ -105,7 +160,6 @@ namespace platform
 			b.newState = -1;
 		}
 
-		inline void resetButtonToZero(Button &b);
 
 		void updateAllButtons();
 		void resetInputsToZero();

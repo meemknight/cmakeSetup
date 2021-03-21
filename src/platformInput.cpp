@@ -4,6 +4,8 @@ platform::Button keyBoard[platform::Button::BUTTONS_COUNT];
 platform::Button leftMouse;
 platform::Button rightMouse;
 
+platform::ControllerButtons controllerButtons;
+
 int platform::isKeyHeld(int key)
 {
 	if (key < Button::A || key >= Button::BUTTONS_COUNT) { return 0; }
@@ -56,6 +58,11 @@ int platform::isRMouseHeld()
 	return rightMouse.held;
 }
 
+platform::ControllerButtons platform::getControllerButtons()
+{
+	return controllerButtons;
+}
+
 void platform::internal::setButtonState(int button, int newState)
 {
 
@@ -83,6 +90,8 @@ void platform::internal::resetButtonToZero(Button &b)
 
 }
 
+
+
 void platform::internal::updateAllButtons()
 {
 	for (int i = 0; i < platform::Button::BUTTONS_COUNT; i++)
@@ -92,6 +101,44 @@ void platform::internal::updateAllButtons()
 
 	updateButton(leftMouse);
 	updateButton(rightMouse);
+	
+	for(int i=0; i<=GLFW_JOYSTICK_LAST; i++)
+	{
+		if(glfwJoystickPresent(i) && glfwJoystickIsGamepad(i))
+		{
+			GLFWgamepadstate state;
+
+			if (glfwGetGamepadState(i, &state))
+			{
+				for (int i = 0; i <= GLFW_GAMEPAD_BUTTON_LAST; i++)
+				{
+					if(state.buttons[i] == GLFW_PRESS)
+					{
+						processEventButton(controllerButtons.buttons[i], 1);
+					}else
+					if (state.buttons[i] == GLFW_RELEASE)
+					{
+						processEventButton(controllerButtons.buttons[i], 0);
+					}
+					updateButton(controllerButtons.buttons[i]);
+
+				}
+				
+				controllerButtons.LT = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+				controllerButtons.RT = state.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
+
+				controllerButtons.LStick.x = state.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
+				controllerButtons.LStick.y = state.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+
+				controllerButtons.RStick.x = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
+				controllerButtons.RStick.y = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+			
+			}
+
+			break;
+		}
+
+	}
 
 
 }
@@ -107,5 +154,5 @@ void platform::internal::resetInputsToZero()
 	resetButtonToZero(leftMouse);
 	resetButtonToZero(rightMouse);
 	
-
+	controllerButtons.setAllToZero();
 }

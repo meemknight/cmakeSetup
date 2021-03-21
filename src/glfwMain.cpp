@@ -5,7 +5,7 @@
 #include "gl2d/gl2d.h"
 #include <iostream>
 #include <ctime>
-#include "tools.h"
+#include "platformTools.h"
 #include "config.h"
 #include <raudio.h>
 #include "platformInput.h"

@@ -43,45 +43,42 @@ bool gameLogic(float deltaTime)
 #pragma region input
 	float speed = 400 * deltaTime;
 
-	if(platform::isKeyHeld(platform::Button::Up))
+	if(platform::isKeyHeld(platform::Button::Up) 
+		|| platform::getControllerButtons().buttons[platform::ControllerButtons::Up].held
+		)
 	{
 		gameData.posy -= speed;
 	}
-	if (platform::isKeyHeld(platform::Button::Down))
+	if (platform::isKeyHeld(platform::Button::Down)
+		|| platform::getControllerButtons().buttons[platform::ControllerButtons::Down].held
+		)
 	{
 		gameData.posy += speed;
 	}
-	if (platform::isKeyHeld(platform::Button::Left))
+	if (platform::isKeyHeld(platform::Button::Left)
+		|| platform::getControllerButtons().buttons[platform::ControllerButtons::Left].held
+		)
 	{
 		gameData.posx -= speed;
 	}
-	if (platform::isKeyHeld(platform::Button::Right))
+	if (platform::isKeyHeld(platform::Button::Right)
+		|| platform::getControllerButtons().buttons[platform::ControllerButtons::Right].held
+		)
 	{
 		gameData.posx += speed;
 	}
 
-	glm::vec4 colors[4] = { Colors_Orange, Colors_Orange, Colors_Orange, Colors_Orange };
-
-	if(platform::isLMousePressed())
-	{
-		colors[0] = Colors_Green;
-		colors[1] = Colors_Red;
-		colors[2] = Colors_Magenta;
-		colors[3] = Colors_Blue;
-	}
-
-	if(platform::mouseMoved())
-	{
-		renderer.renderText({ 100,100 }, "Hello", font, Colors_White);
-		platform::showMouse(true);
-	}else
-	{
-		platform::showMouse(false);
-	}
 
 #pragma endregion
 
+	glm::vec4 colors[4] = { Colors_Orange, Colors_Orange, Colors_Orange, Colors_Orange };
 
+	{
+		colors[0].r = platform::getControllerButtons().LT;
+		colors[1].r = platform::getControllerButtons().RT;
+		colors[2].r = platform::getControllerButtons().LStick.x;
+		colors[3].r = platform::getControllerButtons().RStick.y;
+	}
 
 	renderer.renderRectangle({ 10,10, 100, 100 }, colors, {}, 30);
 
