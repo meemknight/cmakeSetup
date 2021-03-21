@@ -9,8 +9,8 @@ gl2d::Texture texture;
 
 struct GameData
 {
-	int posx=100;
-	int posy=100;
+	float posx=100;
+	float posy=100;
 
 }gameData;
 

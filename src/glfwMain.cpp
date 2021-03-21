@@ -11,6 +11,7 @@
 #include "platformInput.h"
 #include "gameLayer.h"
 #include <fstream>
+#include <chrono>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -18,7 +19,6 @@
 
 #undef min
 #undef max
-
 
 
 void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -294,20 +294,26 @@ int main()
 #pragma endregion
 
 
-	long lastTime = clock();
+	//long lastTime = clock();
+	
+	auto stop = std::chrono::high_resolution_clock::now();
 
 	while (!glfwWindowShouldClose(wind))
 	{
 
 	#pragma region deltaTime
 
-		long newTime = clock();
-		float deltaTime = (float)(newTime - lastTime) / CLOCKS_PER_SEC;
-		lastTime = clock();
+		//long newTime = clock();
+		//float deltaTime = (float)(newTime - lastTime) / CLOCKS_PER_SEC;
+		//lastTime = clock();
+		auto start = std::chrono::high_resolution_clock::now();
+
+		float deltaTime = (std::chrono::duration_cast<std::chrono::microseconds>(start - stop)).count() / 1000000.0f;
+		stop = std::chrono::high_resolution_clock::now();
 
 		float augmentedDeltaTime = deltaTime;
 		if (augmentedDeltaTime > 1.f / 10) { augmentedDeltaTime = 1.f / 10; }
-
+	
 	#pragma endregion
 
 	#pragma region game logic
