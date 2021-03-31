@@ -273,7 +273,7 @@ int main()
 	glfwSetWindowFocusCallback(wind, windowFocusCallback);
 	glfwSetWindowSizeCallback(wind, windowSizeCallback);
 	glfwSetCursorPosCallback(wind, cursorPositionCallback);
-	
+
 	permaAssertComment(gladLoadGL(), "err initializing glad");
 
 #pragma endregion
@@ -284,6 +284,13 @@ int main()
 
 #pragma region audio
 	InitAudioDevice();
+
+	//Music m = LoadMusicStream(RESOURCES_PATH "target.ogg");
+	Music m = {};
+	UpdateMusicStream(m);
+	StopMusicStream(m);
+	PlayMusicStream(m);
+
 #pragma endregion
 
 #pragma region initGame
@@ -300,6 +307,8 @@ int main()
 
 	while (!glfwWindowShouldClose(wind))
 	{
+		UpdateMusicStream(m);
+		PlayMusicStream(m);
 
 	#pragma region deltaTime
 
