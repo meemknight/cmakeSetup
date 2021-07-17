@@ -13,6 +13,7 @@ add_subdirectory(thirdparty/stb_image)
 add_subdirectory(thirdparty/stb_truetype)
 add_subdirectory(thirdparty/gl2d)
 add_subdirectory(thirdparty/raudio)
+add_subdirectory(thirdparty/glm)
 
 
 
@@ -52,7 +53,7 @@ endif()
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/gameLayer/")
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/platform/")
-target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gl2d/include")
 
-target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glfw glad stb_image stb_truetype gl2d raudio)
+
+target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glm glfw glad stb_image stb_truetype gl2d raudio)
 

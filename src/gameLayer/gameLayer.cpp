@@ -85,6 +85,8 @@ bool gameLogic(float deltaTime)
 	
 	renderer.renderRectangle({ gameData.posx,gameData.posy, 100, 100 }, { 0,0 }, 0, texture);
 
+	
+
 
 #pragma region set finishing stuff
 	renderer.flush();
