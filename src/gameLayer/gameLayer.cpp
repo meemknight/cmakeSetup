@@ -1,6 +1,7 @@
 #include "gameLayer.h"
 #include "gl2d/gl2d.h"
 #include "platformInput.h"
+#include "imgui.h"
 
 gl2d::Renderer2D renderer;
 
@@ -85,7 +86,7 @@ bool gameLogic(float deltaTime)
 	
 	renderer.renderRectangle({ gameData.posx,gameData.posy, 100, 100 }, { 0,0 }, 0, texture);
 
-	
+	ImGui::ShowDemoWindow();
 
 
 #pragma region set finishing stuff

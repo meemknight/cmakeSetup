@@ -14,7 +14,7 @@ add_subdirectory(thirdparty/stb_truetype)
 add_subdirectory(thirdparty/gl2d)
 add_subdirectory(thirdparty/raudio)
 add_subdirectory(thirdparty/glm)
-
+add_subdirectory(thirdparty/imgui-docking)
 
 
 # Define MY_SOURCES to be a list of all the source files for my game 
@@ -55,5 +55,5 @@ target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURC
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/platform/")
 
 
-target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glm glfw glad stb_image stb_truetype gl2d raudio)
+target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glm glfw glad stb_image stb_truetype gl2d raudio imgui)
 
