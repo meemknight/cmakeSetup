@@ -9,6 +9,7 @@
 #include "config.h"
 #include <raudio.h>
 #include "platformInput.h"
+#include "otherPlatformFunctions.h"
 #include "gameLayer.h"
 #include <fstream>
 #include <chrono>
@@ -28,6 +29,12 @@
 
 #undef min
 #undef max
+
+#pragma region globals 
+bool currentFullScreen = 0;
+bool fullScreen = 0;
+
+#pragma endregion
 
 
 
@@ -94,7 +101,11 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 		{
 			platform::internal::setButtonState(platform::Button::Right, state);
 		}
-	
+		else
+		if (key == GLFW_KEY_LEFT_CONTROL)
+		{
+			platform::internal::setButtonState(platform::Button::LeftCtrl, state);
+		}
 	}
 	
 };
@@ -169,6 +180,16 @@ namespace platform
 	{
 		glfwSetCursorPos(wind, x, y);
 
+	}
+
+	bool isFullScreen()
+	{
+		return fullScreen;
+	}
+
+	void setFullScreen(bool f)
+	{
+		fullScreen = f;
 	}
 
 	//todo test
@@ -248,7 +269,6 @@ namespace platform
 
 };
 #pragma endregion
-
 
 
 int main()
@@ -381,10 +401,53 @@ int main()
 
 	#pragma endregion
 
+
+	#pragma region fullscreen 
+
+		if (platform::isFocused() && currentFullScreen != fullScreen)
+		{
+			static int lastW = w;
+			static int lastH = w;
+			static int lastPosX = 0;
+			static int lastPosY = 0;
+
+			if (fullScreen)
+			{
+				lastW = w;
+				lastH = h;
+
+				//glfwWindowHint(GLFW_DECORATED, NULL); // Remove the border and titlebar..  
+				glfwGetWindowPos(wind, &lastPosX, &lastPosY);
+
+
+				//auto monitor = glfwGetPrimaryMonitor();
+				auto monitor = getCurrentMonitor(wind);
+
+
+				const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+				// switch to full screen
+				glfwSetWindowMonitor(wind, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+
+				currentFullScreen = 1;
+
+			}
+			else
+			{
+				//glfwWindowHint(GLFW_DECORATED, GLFW_TRUE); // 
+				glfwSetWindowMonitor(wind, nullptr, lastPosX, lastPosY, lastW, lastH, 0);
+
+				currentFullScreen = 0;
+			}
+
+		}
+
+	#pragma endregion
+
 	#pragma region reset flags
 
 		mouseMovedFlag = 0;
-		platform::internal::updateAllButtons();
+		platform::internal::updateAllButtons(deltaTime);
 
 	#pragma endregion
 

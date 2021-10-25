@@ -27,6 +27,13 @@ int platform::isKeyReleased(int key)
 	return keyBoard[key].released;
 }
 
+int platform::isKeyTyped(int key)
+{
+	if (key < Button::A || key >= Button::BUTTONS_COUNT) { return 0; }
+
+	return keyBoard[key].typed;
+}
+
 int platform::isLMousePressed()
 {
 	return leftMouse.pressed;
@@ -92,15 +99,15 @@ void platform::internal::resetButtonToZero(Button &b)
 
 
 
-void platform::internal::updateAllButtons()
+void platform::internal::updateAllButtons(float deltaTime)
 {
 	for (int i = 0; i < platform::Button::BUTTONS_COUNT; i++)
 	{
-		updateButton(keyBoard[i]);
+		updateButton(keyBoard[i], deltaTime);
 	}
 
-	updateButton(leftMouse);
-	updateButton(rightMouse);
+	updateButton(leftMouse, deltaTime);
+	updateButton(rightMouse, deltaTime);
 	
 	for(int i=0; i<=GLFW_JOYSTICK_LAST; i++)
 	{
@@ -120,7 +127,7 @@ void platform::internal::updateAllButtons()
 					{
 						processEventButton(controllerButtons.buttons[i], 0);
 					}
-					updateButton(controllerButtons.buttons[i]);
+					updateButton(controllerButtons.buttons[i], deltaTime);
 
 				}
 				

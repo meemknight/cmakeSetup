@@ -15,6 +15,7 @@ struct GameData
 
 }gameData;
 
+
 bool initGame()
 {
 	renderer.create();
@@ -69,7 +70,17 @@ bool gameLogic(float deltaTime)
 		gameData.posx += speed;
 	}
 
+	if (platform::isKeyTyped(platform::Button::Space)
+		)
+	{
+		gameData.posx += 100;
+	}
 
+
+	if (platform::isKeyPressedOn(platform::Button::Enter))
+	{
+		platform::setFullScreen(!platform::isFullScreen());
+	}
 #pragma endregion
 
 	glm::vec4 colors[4] = { Colors_Orange, Colors_Orange, Colors_Orange, Colors_Orange };

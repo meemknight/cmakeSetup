@@ -10,6 +10,8 @@ namespace platform
 	///sets the mouse pos relative to the window's drawing area
 	void setRelMousePosition(int x, int y);
 
+	bool isFullScreen();
+	void setFullScreen(bool f);
 
 //gets the drawing region sizes
 	glm::ivec2 getWindowSize();

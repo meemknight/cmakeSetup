@@ -9,7 +9,10 @@ namespace platform
 		char pressed = 0;
 		char held = 0;
 		char released = 0;
-		char newState = -1; // this can be -1
+		char newState = -1; // this can be -1, used for internal logic
+		char typed = 0;
+		float typedTime = 0;
+
 
 		enum
 		{
@@ -23,19 +26,20 @@ namespace platform
 			Down,
 			Left,
 			Right,
+			LeftCtrl,
 			BUTTONS_COUNT, //
 		};
 
-		static constexpr int buttonValues[BUTTONS_COUNT] =
-		{
-			GLFW_KEY_A, GLFW_KEY_B, GLFW_KEY_C, GLFW_KEY_D, GLFW_KEY_E, GLFW_KEY_F, GLFW_KEY_G,
-			GLFW_KEY_H, GLFW_KEY_I, GLFW_KEY_J, GLFW_KEY_K, GLFW_KEY_L, GLFW_KEY_M, GLFW_KEY_N,
-			GLFW_KEY_O, GLFW_KEY_P, GLFW_KEY_Q, GLFW_KEY_R, GLFW_KEY_S, GLFW_KEY_T, GLFW_KEY_U, 
-			GLFW_KEY_V, GLFW_KEY_W, GLFW_KEY_X, GLFW_KEY_Y, GLFW_KEY_Z,
-			GLFW_KEY_0, GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5, GLFW_KEY_6,
-			GLFW_KEY_7, GLFW_KEY_8, GLFW_KEY_9,
-			GLFW_KEY_SPACE, GLFW_KEY_ENTER, GLFW_KEY_ESCAPE, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT
-		};
+		//static constexpr int buttonValues[BUTTONS_COUNT] =
+		//{
+		//	GLFW_KEY_A, GLFW_KEY_B, GLFW_KEY_C, GLFW_KEY_D, GLFW_KEY_E, GLFW_KEY_F, GLFW_KEY_G,
+		//	GLFW_KEY_H, GLFW_KEY_I, GLFW_KEY_J, GLFW_KEY_K, GLFW_KEY_L, GLFW_KEY_M, GLFW_KEY_N,
+		//	GLFW_KEY_O, GLFW_KEY_P, GLFW_KEY_Q, GLFW_KEY_R, GLFW_KEY_S, GLFW_KEY_T, GLFW_KEY_U, 
+		//	GLFW_KEY_V, GLFW_KEY_W, GLFW_KEY_X, GLFW_KEY_Y, GLFW_KEY_Z,
+		//	GLFW_KEY_0, GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5, GLFW_KEY_6,
+		//	GLFW_KEY_7, GLFW_KEY_8, GLFW_KEY_9,
+		//	GLFW_KEY_SPACE, GLFW_KEY_ENTER, GLFW_KEY_ESCAPE, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT
+		//};
 
 		void merge(const Button &b)
 		{
@@ -101,10 +105,9 @@ namespace platform
 	
 	//Button::key
 	int isKeyHeld(int key);
-
 	int isKeyPressedOn(int key);
-
 	int isKeyReleased(int key);
+	int isKeyTyped(int key);
 
 	int isLMousePressed();
 	int isRMousePressed();
@@ -130,7 +133,7 @@ namespace platform
 			b.newState = newState;
 		}
 
-		inline void updateButton(Button &b)
+		inline void updateButton(Button &b, float deltaTime)
 		{
 			if (b.newState == 1)
 			{
@@ -157,11 +160,39 @@ namespace platform
 				b.released = false;
 			}
 
+			//processing typed
+			if (b.pressed)
+			{
+				b.typed = true;
+				b.typedTime = 0.48;
+			}
+			else if(b.held)
+			{
+				b.typedTime -= deltaTime;
+			
+				if (b.typedTime < 0.f)
+				{
+					b.typedTime += 0.07;
+					b.typed = true;
+				}
+				else
+				{
+					b.typed = false;
+				}
+
+			}
+			else
+			{
+				b.typedTime = 0;
+				b.typed = false;
+			}
+
+
 			b.newState = -1;
 		}
 
 
-		void updateAllButtons();
+		void updateAllButtons(float deltaTime);
 		void resetInputsToZero();
 	};
 
