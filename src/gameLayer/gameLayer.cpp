@@ -2,6 +2,8 @@
 #include "gl2d/gl2d.h"
 #include "platformInput.h"
 #include "imgui.h"
+#include <iostream>
+#include <sstream>
 
 gl2d::Renderer2D renderer;
 
@@ -12,6 +14,8 @@ struct GameData
 {
 	float posx=100;
 	float posy=100;
+
+	int test = 0;
 
 }gameData;
 
@@ -70,10 +74,15 @@ bool gameLogic(float deltaTime)
 		gameData.posx += speed;
 	}
 
-	if (platform::isKeyTyped(platform::Button::Space)
+	if (platform::isKeyTyped(platform::Button::NR1)
 		)
 	{
-		gameData.posx += 100;
+		gameData.test -= 1;
+	}
+	if (platform::isKeyTyped(platform::Button::NR2)
+		)
+	{
+		gameData.test += 1;
 	}
 
 
@@ -96,6 +105,8 @@ bool gameLogic(float deltaTime)
 
 	
 	renderer.renderRectangle({ gameData.posx,gameData.posy, 100, 100 }, { 0,0 }, 0, texture);
+
+	renderer.renderText({10,200}, std::to_string(gameData.test).c_str(), font, Colors_White, 1.5, 4.0, 3, false);
 
 	ImGui::ShowDemoWindow();
 
