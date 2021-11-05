@@ -130,7 +130,7 @@
 		
 		#define permaAssertComment(expression, comment) (void)(								\
 					(!!(expression)) ||														\
-					(assertFuncInternal(#expression, __FILE__, (unsigned)(__LINE__), comment), 1)	\
+					(assertFuncInternal(#expression, __FILE__, (unsigned)(__LINE__), comment), 1)\
 				)
 		
 	#else
