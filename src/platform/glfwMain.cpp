@@ -346,7 +346,7 @@ int main()
 	//Music m = LoadMusicStream(RESOURCES_PATH "target.ogg");
 	Music m = {};
 	UpdateMusicStream(m);
-	StopMusicStream(m);
+	//StopMusicStream(m);
 	PlayMusicStream(m);
 
 #pragma endregion
@@ -396,6 +396,7 @@ int main()
 
 		if (!gameLogic(augmentedDeltaTime))
 		{
+			closeGame();
 			return 0;
 		}
 
