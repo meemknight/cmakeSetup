@@ -89,15 +89,6 @@ void platform::internal::setRightMouseState(int newState)
 
 }
 
-void platform::internal::resetButtonToZero(Button &b)
-{
-	b.pressed = 0;
-	b.held = 0;
-	b.released = 0;
-
-}
-
-
 
 void platform::internal::updateAllButtons(float deltaTime)
 {

@@ -51,7 +51,12 @@ namespace platform
 
 	namespace internal
 	{
-		inline void resetButtonToZero(Button &b);
+		inline void resetButtonToZero(Button &b)
+		{
+			b.pressed = 0;
+			b.held = 0;
+			b.released = 0;
+		}
 	}
 
 	struct ControllerButtons
