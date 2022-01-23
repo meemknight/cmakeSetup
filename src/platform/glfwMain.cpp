@@ -139,7 +139,7 @@ void mouseCallback(GLFWwindow *window, int key, int action, int mods)
 
 }
 
-bool windowFocus = 0;
+bool windowFocus = 1;
 
 void windowFocusCallback(GLFWwindow *window, int focused)
 {
@@ -168,6 +168,14 @@ void cursorPositionCallback(GLFWwindow *window, double xpos, double ypos)
 	mouseMovedFlag = 1;
 }
 
+void characterCallback(GLFWwindow *window, unsigned int codepoint)
+{
+	if (codepoint < 127)
+	{
+		platform::internal::addToTypedInput(codepoint);
+	}
+}
+
 #pragma region platform functions
 
 GLFWwindow *wind = 0;
@@ -175,11 +183,9 @@ GLFWwindow *wind = 0;
 namespace platform
 {
 
-	//todo test
 	void setRelMousePosition(int x, int y)
 	{
 		glfwSetCursorPos(wind, x, y);
-
 	}
 
 	bool isFullScreen()
@@ -192,22 +198,17 @@ namespace platform
 		fullScreen = f;
 	}
 
-	//todo test
 	glm::ivec2 getRelMousePosition()
 	{
 		double x = 0, y = 0;
 		glfwGetCursorPos(wind, &x, &y);
-
 		return { x, y };
 	}
 
-	//todo test
 	glm::ivec2 getWindowSize()
 	{
 		int x = 0; int y = 0;
-
 		glfwGetWindowSize(wind, &x, &y);
-
 		return { x, y };
 	}
 
@@ -221,7 +222,6 @@ namespace platform
 		{
 			glfwSetInputMode(wind, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 		}
-
 	}
 
 	bool isFocused()
@@ -278,9 +278,9 @@ int main()
 #ifdef _MSC_VER 
 #if INTERNAL_BUILD
 	AllocConsole();
-	freopen("conin$", "r", stdin);
-	freopen("conout$", "w", stdout);
-	freopen("conout$", "w", stderr);
+	(void)freopen("conin$", "r", stdin);
+	(void)freopen("conout$", "w", stdout);
+	(void)freopen("conout$", "w", stderr);
 	std::cout.sync_with_stdio();
 #endif
 #endif
@@ -303,6 +303,7 @@ int main()
 	glfwSetWindowFocusCallback(wind, windowFocusCallback);
 	glfwSetWindowSizeCallback(wind, windowSizeCallback);
 	glfwSetCursorPosCallback(wind, cursorPositionCallback);
+	glfwSetCharCallback(wind, characterCallback);
 
 	permaAssertComment(gladLoadGL(), "err initializing glad");
 
@@ -449,6 +450,7 @@ int main()
 
 		mouseMovedFlag = 0;
 		platform::internal::updateAllButtons(deltaTime);
+		platform::internal::resetTypedInput();
 
 	#pragma endregion
 

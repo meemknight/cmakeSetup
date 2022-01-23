@@ -1,8 +1,9 @@
 #pragma once
 #include <GLFW/glfw3.h>
 #include "gameLayer.h"
+#include <string>
 
-namespace platform 
+namespace platform
 {
 	struct Button
 	{
@@ -124,6 +125,7 @@ namespace platform
 	int isRMouseHeld();
 
 	ControllerButtons getControllerButtons();
+	std::string getTypedInput();
 
 	namespace internal
 	{
@@ -169,7 +171,7 @@ namespace platform
 			if (b.pressed)
 			{
 				b.typed = true;
-				b.typedTime = 0.48;
+				b.typedTime = 0.48f;
 			}
 			else if(b.held)
 			{
@@ -177,7 +179,7 @@ namespace platform
 			
 				if (b.typedTime < 0.f)
 				{
-					b.typedTime += 0.07;
+					b.typedTime += 0.07f;
 					b.typed = true;
 				}
 				else
@@ -199,6 +201,10 @@ namespace platform
 
 		void updateAllButtons(float deltaTime);
 		void resetInputsToZero();
+
+		void addToTypedInput(char c);
+		void resetTypedInput();
+
 	};
 
 };

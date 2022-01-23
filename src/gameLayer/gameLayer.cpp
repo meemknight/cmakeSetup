@@ -110,6 +110,7 @@ bool gameLogic(float deltaTime)
 
 	//ImGui::ShowDemoWindow();
 
+	std::cout << platform::getTypedInput();
 
 #pragma region set finishing stuff
 	renderer.flush();
