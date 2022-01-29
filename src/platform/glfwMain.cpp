@@ -41,6 +41,11 @@ bool fullScreen = 0;
 void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
 
+	if ((action == GLFW_REPEAT || action == GLFW_PRESS) && key == GLFW_KEY_BACKSPACE)
+	{
+		platform::internal::addToTypedInput(8);
+	}
+
 	bool state = 0;
 
 	if(action == GLFW_PRESS)
