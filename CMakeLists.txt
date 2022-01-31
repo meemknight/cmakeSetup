@@ -1,6 +1,10 @@
 #https://github.com/meemknight/cmakeSetup
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebug$<$<CONFIG:Debug>:Debug>")
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
 project(mygame)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
