@@ -68,7 +68,7 @@ int platform::isRMouseHeld()
 
 platform::ControllerButtons platform::getControllerButtons()
 {
-	return controllerButtons;
+	return platform::isFocused() ? controllerButtons : platform::ControllerButtons{};
 }
 
 std::string platform::getTypedInput()

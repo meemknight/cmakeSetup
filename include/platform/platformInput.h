@@ -81,30 +81,19 @@ namespace platform
 		Left = GLFW_GAMEPAD_BUTTON_DPAD_LEFT,  
 		};
 
-		Button buttons[GLFW_GAMEPAD_BUTTON_LAST + 1];
+		Button buttons[GLFW_GAMEPAD_BUTTON_LAST + 1] = {};
 
-		float LT;
-		float RT;
+		float LT = 0.f;
+		float RT = 0.f;
 
 		struct
 		{
-			float x, y;
+			float x = 0.f, y = 0.f;
 		}LStick, RStick;
 
 		void setAllToZero()
 		{
-			
-			for(int i=0; i< GLFW_GAMEPAD_BUTTON_LAST+1; i++)
-			{
-				internal::resetButtonToZero(buttons[i]);
-			}
-
-			LT = 0;
-			RT = 0;
-
-			LStick = {};
-			RStick = {};
-
+			*this = ControllerButtons();
 		}
 	};
 
