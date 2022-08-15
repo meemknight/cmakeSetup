@@ -231,6 +231,7 @@ namespace platform
 
 	bool isFocused()
 	{
+		
 		return windowFocus;
 	}
 

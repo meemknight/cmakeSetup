@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////
-//gl2d.cpp				1.2.2
+//gl2d.cpp				1.2.5
 //Copyright(c) 2020 Luta Vlad
 //https://github.com/meemknight/gl2d
 // 
@@ -20,6 +20,13 @@
 // texture load flags
 // working on 9pathces
 // 
+// 1.2.4
+// working at fixing get text size
+// 
+// 1.2.5
+// push pop shaders and camera
+// added getViewRect
+// 
 //////////////////////////////////////////////////
 
 
@@ -32,8 +39,8 @@
 //	shaders
 //	add matrices transforms
 //	flags for vbos
+//	
 //
-
 
 #include "gl2d/gl2d.h"
 
@@ -458,7 +465,7 @@ namespace gl2d
 			const stbtt_aligned_quad  q = internal::fontGetGlyphQuad(*this, c);
 			const float               m = q.y1 - q.y0;
 
-			if (m > max_height)
+			if (m > max_height && m < 1.e+8f)
 			{
 				max_height = m;
 			}
@@ -1061,6 +1068,70 @@ namespace gl2d
 		glBindVertexArray(0);
 	}
 
+	void Renderer2D::pushShader(internal::ShaderProgram s)
+	{
+		shaderPushPop.push_back(currentShader);
+		currentShader = s;
+	}
+
+	void Renderer2D::popShader()
+	{
+		if (shaderPushPop.empty())
+		{
+			errorFunc("Pop on an empty stack on popShader");
+		}
+		else
+		{
+			currentShader = shaderPushPop.back();
+			shaderPushPop.pop_back();
+		}
+	}
+
+	void Renderer2D::pushCamera(Camera c)
+	{
+		cameraPushPop.push_back(currentCamera);
+		currentCamera = c;
+	}
+
+	void Renderer2D::popCamera()
+	{
+		if (cameraPushPop.empty())
+		{
+			errorFunc("Pop on an empty stack on popCamera");
+		}
+		else
+		{
+			currentCamera = cameraPushPop.back();
+			cameraPushPop.pop_back();
+		}
+	}
+
+	glm::vec4 Renderer2D::getViewRect()
+	{
+		auto rect = glm::vec4{0, 0, windowW, windowH};
+
+		glm::mat3 mat =
+		{1.f, 0, currentCamera.position.x ,
+		 0, 1.f, currentCamera.position.y,
+		 0, 0, 1.f};
+		mat = glm::transpose(mat);
+
+		glm::vec3 pos1 = {rect.x, rect.y, 1.f};
+		glm::vec3 pos2 = {rect.z + rect.x, rect.w + rect.y, 1.f};
+
+		pos1 = mat * pos1;
+		pos2 = mat * pos2;
+
+		glm::vec2 point((pos1.x + pos2.x) / 2.f, (pos1.y + pos2.y) / 2.f);
+
+		pos1 = glm::vec3(scaleAroundPoint(pos1, point, 1.f / currentCamera.zoom), 1.f);
+		pos2 = glm::vec3(scaleAroundPoint(pos2, point, 1.f / currentCamera.zoom), 1.f);
+
+		rect = {pos1.x, pos1.y, pos2.x - pos1.x, pos2.y - pos1.y};
+
+		return rect;
+	}
+
 	glm::vec4 Renderer2D::toScreen(const glm::vec4 &transform)
 	{
 		//We need to flip texture_transforms.y
@@ -1113,7 +1184,7 @@ namespace gl2d
 		glm::vec2 position = {};
 
 		const int text_length = (int)strlen(text);
-		Rect rectangle;
+		Rect rectangle = {};
 		rectangle.x = position.x;
 		float linePositionY = position.y;
 
@@ -1675,6 +1746,7 @@ namespace gl2d
 			 0, zoom, position.y,
 			0, 0, 1,
 		};
+		m = glm::transpose(m);
 		return m; //todo not tested, add rotation
 	}
 

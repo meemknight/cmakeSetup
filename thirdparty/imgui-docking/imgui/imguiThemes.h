@@ -257,28 +257,28 @@ namespace imguiThemes
         colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
         colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 
-        style.PopupRounding = 3.f;
+        style.PopupRounding = 3;
 
-        style.WindowPadding = ImVec2(4.f, 4.f);
-        style.FramePadding = ImVec2(6.f, 4.f);
-        style.ItemSpacing = ImVec2(6.f, 2.f);
+        style.WindowPadding = ImVec2(4, 4);
+        style.FramePadding = ImVec2(6, 4);
+        style.ItemSpacing = ImVec2(6, 2);
 
-        style.ScrollbarSize = 18.f;
+        style.ScrollbarSize = 18;
 
-        style.WindowBorderSize = 1.f;
-        style.ChildBorderSize = 1.f;
-        style.PopupBorderSize = 1.f;
-        style.FrameBorderSize = (float)is3D;
+        style.WindowBorderSize = 1;
+        style.ChildBorderSize = 1;
+        style.PopupBorderSize = 1;
+        style.FrameBorderSize = is3D;
 
-        style.WindowRounding = 3.f;
-        style.ChildRounding = 3.f;
-        style.FrameRounding = 3.f;
-        style.ScrollbarRounding = 2.f;
-        style.GrabRounding = 3.f;
+        style.WindowRounding = 3;
+        style.ChildRounding = 3;
+        style.FrameRounding = 3;
+        style.ScrollbarRounding = 2;
+        style.GrabRounding = 3;
 
     #ifdef IMGUI_HAS_DOCK 
-        style.TabBorderSize = (float)is3D;
-        style.TabRounding = 3.f;
+        style.TabBorderSize = is3D;
+        style.TabRounding = 3;
 
         colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.38f, 0.38f, 0.38f, 1.00f);
         colors[ImGuiCol_Tab] = ImVec4(0.25f, 0.25f, 0.25f, 1.00f);

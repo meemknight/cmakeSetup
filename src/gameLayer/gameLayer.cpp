@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include <iostream>
 #include <sstream>
+#include "imfilebrowser.h"
 
 gl2d::Renderer2D renderer;
 
@@ -108,7 +109,18 @@ bool gameLogic(float deltaTime)
 
 	renderer.renderText({10,200}, std::to_string(gameData.test).c_str(), font, Colors_White, 1.5, 4.0, 3, false);
 
-	//ImGui::ShowDemoWindow();
+	if(0)
+	{
+		ImGui::ShowDemoWindow();
+
+		static ImGui::FileBrowser fileBrowser;
+		static bool oppened = 0;
+
+		if (!oppened) { oppened = 1; fileBrowser.Open(); }
+
+		fileBrowser.Display();
+
+	}
 
 	std::cout << platform::getTypedInput();
 

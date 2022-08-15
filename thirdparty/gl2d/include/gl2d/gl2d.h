@@ -1,11 +1,9 @@
 //////////////////////////////////////////////////
-//gl2d.h				1.2.3
+//gl2d.h				1.2.5
 //Copyright(c) 2020 Luta Vlad
 //https://github.com/meemknight/gl2d
 //
-//
-//	dependences: glew, glm, stb_image, stb_trueType
-//
+//	dependences: glew(or any loader you want to use), glm, stb_image, stb_trueType
 //
 //	features: 
 //	
@@ -249,7 +247,7 @@ namespace gl2d
 	struct Camera
 	{
 		glm::vec2  position = {};
-		glm::vec2  target = {};   // Camera target (rotation and zoom origin)
+		//glm::vec2  target = {};   // Camera target (rotation and zoom origin)
 		float rotation = 0.f; // Camera rotation in degrees
 		float zoom = 1.0;     // Camera zoom (scaling), should be 1.0f by default
 
@@ -327,7 +325,17 @@ namespace gl2d
 		Texture white1pxSquareTexture = {};
 
 		internal::ShaderProgram currentShader = {};
+		std::vector<internal::ShaderProgram> shaderPushPop;
+		void pushShader(internal::ShaderProgram s = {});
+		void popShader();
+
 		Camera currentCamera = {};
+		std::vector<Camera> cameraPushPop;
+		void pushCamera(Camera c = {});
+		void popCamera();
+
+		glm::vec4 getViewRect(); //returns the view coordonates and size of this camera. Doesn't take rotation into account!
+
 
 		//window metrics, should be up to date at all times
 		int windowW = 0;

@@ -36,15 +36,6 @@
 
 -(void)initialize
 {
-    // Some events do not raise callbacks of AppView in some circumstances (for example when CMD key is held down).
-    // This monitor taps into global event stream and captures these events.
-    NSEventMask eventMask = NSEventMaskKeyDown | NSEventMaskKeyUp | NSEventMaskFlagsChanged;
-    [NSEvent addLocalMonitorForEventsMatchingMask:eventMask handler:^NSEvent * _Nullable(NSEvent *event)
-    {
-        ImGui_ImplOSX_HandleEvent(event, self);
-        return event;
-    }];
-
     // Setup Dear ImGui context
     // FIXME: This example doesn't have proper cleanup...
     IMGUI_CHECKVERSION();
@@ -53,13 +44,22 @@
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
+    //ImGui::StyleColorsLight();
+
+    // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+    }
 
     // Setup Platform/Renderer backends
-    ImGui_ImplOSX_Init();
+    ImGui_ImplOSX_Init(self);
     ImGui_ImplOpenGL2_Init();
 
     // Load Fonts
@@ -81,6 +81,7 @@
 -(void)updateAndDrawDemoView
 {
     // Start the Dear ImGui frame
+    ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplOpenGL2_NewFrame();
     ImGui_ImplOSX_NewFrame(self);
     ImGui::NewFrame();
@@ -140,6 +141,13 @@
 
     ImGui_ImplOpenGL2_RenderDrawData(draw_data);
 
+    // Update and Render additional Platform Windows
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+    }
+
     // Present
     [[self openGLContext] flushBuffer];
 
@@ -147,33 +155,10 @@
         animationTimer = [NSTimer scheduledTimerWithTimeInterval:0.017 target:self selector:@selector(animationTimerFired:) userInfo:nil repeats:YES];
 }
 
--(void)reshape                              { [[self openGLContext] update]; [self updateAndDrawDemoView]; }
+-(void)reshape                              { [super reshape]; [[self openGLContext] update]; [self updateAndDrawDemoView]; }
 -(void)drawRect:(NSRect)bounds              { [self updateAndDrawDemoView]; }
 -(void)animationTimerFired:(NSTimer*)timer  { [self setNeedsDisplay:YES]; }
--(BOOL)acceptsFirstResponder                { return (YES); }
--(BOOL)becomeFirstResponder                 { return (YES); }
--(BOOL)resignFirstResponder                 { return (YES); }
 -(void)dealloc                              { animationTimer = nil; }
-
-//-----------------------------------------------------------------------------------
-// Input processing
-//-----------------------------------------------------------------------------------
-
-// Forward Mouse/Keyboard events to Dear ImGui OSX backend.
-// Other events are registered via addLocalMonitorForEventsMatchingMask()
--(void)mouseDown:(NSEvent *)event           { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)rightMouseDown:(NSEvent *)event      { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)otherMouseDown:(NSEvent *)event      { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)mouseUp:(NSEvent *)event             { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)rightMouseUp:(NSEvent *)event        { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)otherMouseUp:(NSEvent *)event        { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)mouseMoved:(NSEvent *)event          { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)mouseDragged:(NSEvent *)event        { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)rightMouseMoved:(NSEvent *)event     { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)rightMouseDragged:(NSEvent *)event   { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)otherMouseMoved:(NSEvent *)event     { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)otherMouseDragged:(NSEvent *)event   { ImGui_ImplOSX_HandleEvent(event, self); }
--(void)scrollWheel:(NSEvent *)event         { ImGui_ImplOSX_HandleEvent(event, self); }
 
 @end
 
