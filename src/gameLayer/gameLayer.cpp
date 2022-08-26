@@ -113,12 +113,12 @@ bool gameLogic(float deltaTime)
 	{
 		ImGui::ShowDemoWindow();
 
-		static ImGui::FileBrowser fileBrowser;
-		static bool oppened = 0;
-
-		if (!oppened) { oppened = 1; fileBrowser.Open(); }
-
-		fileBrowser.Display();
+		//static ImGui::FileBrowser fileBrowser;
+		//static bool oppened = 0;
+		//
+		//if (!oppened) { oppened = 1; fileBrowser.Open(); }
+		//
+		//fileBrowser.Display();
 
 	}
 

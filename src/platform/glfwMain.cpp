@@ -111,6 +111,10 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 		{
 			platform::internal::setButtonState(platform::Button::LeftCtrl, state);
 		}
+		if (key == GLFW_KEY_TAB)
+		{
+			platform::internal::setButtonState(platform::Button::Tab, state);
+		}
 	}
 	
 };
