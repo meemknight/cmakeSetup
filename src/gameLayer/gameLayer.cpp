@@ -1,39 +1,102 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include "gameLayer.h"
-#include "gl2d/gl2d.h"
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 #include "platformInput.h"
 #include "imgui.h"
 #include <iostream>
 #include <sstream>
 #include "imfilebrowser.h"
+#include <shader.h>
 
-gl2d::Renderer2D renderer;
-
-gl2d::Font font;
-gl2d::Texture texture;
 
 struct GameData
 {
-	float posx=100;
-	float posy=100;
 
-	int test = 0;
 
 }gameData;
 
 
+
+GLuint vertex;
+ShaderProgram s;
+GLint u_color;
+GLint u_mat;
+
 bool initGame()
 {
-	renderer.create();
-	font.createFromFile(RESOURCES_PATH "roboto_black.ttf");
-	texture.loadFromFile(RESOURCES_PATH "test.jpg");
+	glDisable(GL_CULL_FACE);
 
-	if(!platform::readEntireFile(RESOURCES_PATH "gameData.data", &gameData, sizeof(GameData)))
+	//x y
+	/*
+	float points[] =
 	{
-		gameData = GameData();
-	}
+		-1, -1,
+		1, -1,
+		1, 1,
+
+		-1, -1,
+		1, 1,
+		-1, 1
+	};
+	*/
+
+	float points[] =
+	{
+		0, 0,
+		1, 0,
+		1, 1,
+
+		0, 0,
+		1, 1,
+		0, 1
+	};
+
+	glGenBuffers(1, &vertex); // var vertex;
+
+
+	// vertex data -> VERTEX_ARRAY (VBO) = vertex
+	glBindBuffer(GL_ARRAY_BUFFER, vertex); //seteaza bufferul curent cu care lucram
+
+
+	//VERTEX_ARRAY = points
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0); // aici ii zici cum arata datele tale (2 floaturi per component)
+	//index, cate coordonate, ce tip de date, normalizare, dimensiunea unui punct, de unde incep
+
+	glEnableVertexAttribArray(0); //da folosim chestia asta, 0 reprezinta indexul
+
+	// vertex data					-> VERTEX_ARRAY = vertex
+	// cum arata datele tale		-> VAO = new VAO(float, 2 componente)
+	// shader						-> Shader s = new Shader(yourShader);
+
+	s = ShaderProgram(RESOURCES_PATH "vertex.vert", RESOURCES_PATH "fragment.frag");
+
+	u_color = s.getUniformLocation("u_color");
+	u_mat = s.getUniformLocation("u_mat");
+	
 
 	return true;
 }
+
+
+void renderRect(glm::vec3 color, glm::mat4 mat)
+{
+	s.bind();
+	glBindBuffer(GL_ARRAY_BUFFER, vertex);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glUniform3f(u_color, color.r, color.g, color.b);
+
+	glUniformMatrix4fv(u_mat, 1, GL_FALSE, &mat[0][0]);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
 
 bool gameLogic(float deltaTime)
 {
@@ -42,90 +105,28 @@ bool gameLogic(float deltaTime)
 	w= platform::getWindowSizeX();
 	h = platform::getWindowSizeY();
 	
-	renderer.updateWindowMetrics(w, h);
-	renderer.clearScreen();
+	glViewport(0, 0, w, h);
+	glClear(GL_COLOR_BUFFER_BIT);
+
 #pragma endregion
 
+	static float sizeX = 100;
+	static float sizeY = 100;
 
-#pragma region input
-	float speed = 400 * deltaTime;
+	ImGui::Begin("test");
 
-	if(platform::isKeyHeld(platform::Button::Up) 
-		|| platform::getControllerButtons().buttons[platform::ControllerButtons::Up].held
-		)
-	{
-		gameData.posy -= speed;
-	}
-	if (platform::isKeyHeld(platform::Button::Down)
-		|| platform::getControllerButtons().buttons[platform::ControllerButtons::Down].held
-		)
-	{
-		gameData.posy += speed;
-	}
-	if (platform::isKeyHeld(platform::Button::Left)
-		|| platform::getControllerButtons().buttons[platform::ControllerButtons::Left].held
-		)
-	{
-		gameData.posx -= speed;
-	}
-	if (platform::isKeyHeld(platform::Button::Right)
-		|| platform::getControllerButtons().buttons[platform::ControllerButtons::Right].held
-		)
-	{
-		gameData.posx += speed;
-	}
+	ImGui::SliderFloat("slider x", &sizeX, 1, 200);
+	ImGui::SliderFloat("slider y", &sizeY, 1, 200);
 
-	if (platform::isKeyTyped(platform::Button::NR1)
-		)
-	{
-		gameData.test -= 1;
-	}
-	if (platform::isKeyTyped(platform::Button::NR2)
-		)
-	{
-		gameData.test += 1;
-	}
+	ImGui::End();
 
 
-	if (platform::isKeyPressedOn(platform::Button::Enter))
-	{
-		platform::setFullScreen(!platform::isFullScreen());
-	}
-#pragma endregion
+	glm::mat4 resizeMatrix = glm::ortho(-(float)w, (float)w, -(float)h, (float)h);
+	glm::mat4 t = glm::scale(glm::mat4(1.f), {sizeX,sizeY,0.f});
+	glm::mat4 mat = resizeMatrix * t;
 
-	glm::vec4 colors[4] = { Colors_Orange, Colors_Orange, Colors_Orange, Colors_Orange };
-
-	{
-		colors[0].r = platform::getControllerButtons().LT;
-		colors[1].r = platform::getControllerButtons().RT;
-		colors[2].r = platform::getControllerButtons().LStick.x;
-		colors[3].r = platform::getControllerButtons().RStick.y;
-	}
-
-	renderer.renderRectangle({ 10,10, 100, 100 }, colors, {}, 30);
-
-	
-	renderer.renderRectangle({ gameData.posx,gameData.posy, 100, 100 }, { 0,0 }, 0, texture);
-
-	renderer.renderText({10,200}, std::to_string(gameData.test).c_str(), font, Colors_White, 1.5, 4.0, 3, false);
-
-	if(0)
-	{
-		ImGui::ShowDemoWindow();
-
-		//static ImGui::FileBrowser fileBrowser;
-		//static bool oppened = 0;
-		//
-		//if (!oppened) { oppened = 1; fileBrowser.Open(); }
-		//
-		//fileBrowser.Display();
-
-	}
-
-	std::cout << platform::getTypedInput();
-
-#pragma region set finishing stuff
-	renderer.flush();
+	renderRect({0,0,1}, mat);
+		
 
 	return true;
 #pragma endregion
