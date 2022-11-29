@@ -21,6 +21,8 @@ add_subdirectory(thirdparty/glm)
 add_subdirectory(thirdparty/imgui-docking)
 add_subdirectory(thirdparty/safeSave)
 add_subdirectory(thirdparty/profilerLib)
+add_subdirectory(thirdparty/enet-1.3.17)
+add_subdirectory(thirdparty/glui)
 
 
 # Define MY_SOURCES to be a list of all the source files for my game 
@@ -60,5 +62,5 @@ target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURC
 
 
 target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glm glfw 
-	glad stb_image stb_truetype gl2d raudio imgui safeSave profilerLib)
+	glad stb_image stb_truetype gl2d raudio imgui safeSave profilerLib enet glui)
 
