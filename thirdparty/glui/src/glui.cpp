@@ -42,6 +42,8 @@ namespace glui
 		sliderFloatW,
 		colorPickerW,
 		newColumW,
+		sliderIntW,
+		customWidget,
 	};
 
 	struct InputData
@@ -66,9 +68,15 @@ namespace glui
 		gl2d::Texture textureOver = {};
 		glm::vec4 textureCoords = {};
 		bool returnFromUpdate = 0;
+		bool customWidgetUsed = 0;
 		void *pointer = 0;
+		bool clicked = 0; //todo for all?
+		bool hovered = 0;
 		float min = 0;
 		float max = 0;
+		int minInt = 0;
+		int maxInt = 0;
+		glm::vec4 returnTransform = {};//todo mabe for every widget?
 
 		struct PersistentData
 		{
@@ -423,6 +431,78 @@ namespace glui
 		
 	}
 
+	void renderSliderInt(gl2d::Renderer2D &renderer, glm::vec4 transform, int *value, int min, int max,
+		bool &sliderBeingDragged,
+		gl2d::Texture barT, gl2d::Color4f barC, gl2d::Texture ballT, gl2d::Color4f ballC, InputData &input)
+	{
+
+		float barSize = 7;
+		float barIndent = 16;
+
+		glm::vec4 barTransform(transform.x + barIndent, transform.y + (transform.w - barSize) / 2.f,
+			transform.z - barIndent * 2.f, barSize);
+
+		float bulletSize = 14.f;
+
+		glm::vec4 bulletTransform(barTransform.x - (bulletSize) / 2.f, barTransform.y + (barSize - bulletSize) / 2.f,
+			bulletSize, bulletSize);
+
+
+		bulletTransform.x += std::max(std::min((*value - min) / (float)(max - min), 1.f), 0.f)
+			* barTransform.z;
+
+		//todo color
+		renderFancyBox(renderer, barTransform, barC, barT, 0, 0);
+
+		bool hovered = false;
+		bool clicked = false;
+
+		if (sliderBeingDragged == true && input.mouseHeld)
+		{
+			hovered = true;
+			clicked = true;
+		}
+		else
+		{
+			if (aabb(barTransform, input.mousePos))
+			{
+				hovered = true;
+
+				if (input.mouseClick)
+				{
+					clicked = true;
+				}
+			}
+		}
+
+		if (clicked)
+		{
+			sliderBeingDragged = true;
+
+			int begin = barTransform.x;
+			int end = barTransform.x + barTransform.z;
+
+			int mouseX = input.mousePos.x;
+
+			float mouseVal = (mouseX - (float)begin) / (end - (float)begin);
+
+			mouseVal = glm::clamp(mouseVal, 0.f, 1.f);
+
+			mouseVal *= max - min;
+			mouseVal += min;
+
+			*value = mouseVal;
+		}
+		else
+		{
+			sliderBeingDragged = false;
+		}
+
+		renderFancyBox(renderer, bulletTransform, ballC, ballT,
+			hovered, clicked);
+
+	}
+
 
 	float timer=0;
 	int currentId = 0;
@@ -438,6 +518,7 @@ namespace glui
 			return;
 		}
 		//find the menu stack for this Begin()
+		
 		auto iterMenuStack = allMenuStacks.find(currentId);
 		if (iterMenuStack == allMenuStacks.end())
 		{
@@ -457,6 +538,15 @@ namespace glui
 		if (timer >= 2.f)
 		{
 			timer -= 2;
+		}
+
+		//clear some data
+		for (auto &i : widgets)
+		{
+			if (i.second.type == widgetType::customWidget)
+			{
+				i.second.customWidgetUsed = false;
+			}
 		}
 
 		std::vector<std::pair<std::string, Widget>> widgetsCopy;
@@ -908,17 +998,19 @@ namespace glui
 
 					case widgetType::sliderFloatW:
 					{
+						if (j.second.max <= j.second.min) { break; }
+
 						auto computedPos = colums[currentColum].first;
 
 						glm::vec4 textTransform{computedPos.x, computedPos.y, computedPos.z / 2, computedPos.w};
 						glm::vec4 sliderTransform{computedPos.x + computedPos.z / 2, computedPos.y, computedPos.z/2, computedPos.w};
 
 						float *value = (float*)j.second.pointer;
+						if (!value) { break; }
 
 						*value = std::min(*value, j.second.max);
 						*value = std::max(*value, j.second.min);
 
-						if (!value) { break; }
 
 						std::string text = j.first;
 						
@@ -936,6 +1028,7 @@ namespace glui
 
 						break;
 					}
+
 
 					case widgetType::colorPickerW:
 					{
@@ -975,6 +1068,49 @@ namespace glui
 						colums[currentColum].first.y -= colums[currentColum].second; //neagate end of loop;
 						break;
 					}
+
+					case widgetType::sliderIntW: 
+					{
+						if (j.second.maxInt <= j.second.minInt) { break; }
+
+						auto computedPos = colums[currentColum].first;
+
+						glm::vec4 textTransform{computedPos.x, computedPos.y, computedPos.z / 2, computedPos.w};
+						glm::vec4 sliderTransform{computedPos.x + computedPos.z / 2, computedPos.y, computedPos.z / 2, computedPos.w};
+
+						int *value = (int *)j.second.pointer;
+						if (!value) { break; }
+
+						*value = std::min(*value, j.second.maxInt);
+						*value = std::max(*value, j.second.minInt);
+
+
+						std::string text = j.first;
+
+						text = getString(text) + ": " + std::to_string(*value);
+
+						renderText(renderer, text, font, textTransform, j.second.colors, true);
+
+						renderSliderInt(renderer, sliderTransform,
+							value, j.second.minInt, j.second.maxInt, j.second.pd.sliderBeingDragged,
+							j.second.texture, j.second.colors, j.second.textureOver, j.second.colors2, input);
+
+					
+						break;
+					}
+
+					case widgetType::customWidget:
+					{
+						j.second.returnTransform = colums[currentColum].first;
+						j.second.customWidgetUsed = true;
+
+						j.second.hovered = aabb(j.second.returnTransform, mousePos);
+						
+						j.second.clicked = aabb(j.second.returnTransform, mousePos) && mouseHeld;
+
+						break;
+					}
+
 				}
 
 				widget.justCreated = false;
@@ -1102,6 +1238,37 @@ namespace glui
 
 	}
 
+	bool CustomWidget(int id, glm::vec4 *transform, bool *hovered, bool *clicked)
+	{
+		std::string name = "##$customWidgetWithId:" + std::to_string(id);
+
+		Widget widget = {};
+		widget.type = widgetType::customWidget;
+		widget.pointer = transform;
+
+		widgetsVector.push_back({name, widget});
+
+		auto find = widgets.find(name);
+		if (find != widgets.end())
+		{
+			*transform = find->second.returnTransform;
+
+			if (hovered)
+			{
+				*hovered = find->second.hovered;
+				*clicked = find->second.clicked;
+			}
+
+			return find->second.customWidgetUsed;
+		}
+		else
+		{
+			*transform = {};
+
+			return false;
+		}
+	}
+
 	void Text(std::string name, const gl2d::Color4f colors)
 	{
 		name += idStr;
@@ -1147,11 +1314,28 @@ namespace glui
 		widget.colors2 = ballColor;
 		widget.texture = sliderTexture;
 		widget.textureOver = ballTexture;
-		
 
 		widgetsVector.push_back({name, widget});
+	}
 
+	void sliderInt(std::string name, int *value, int min, int max,
+		gl2d::Texture sliderTexture, gl2d::Color4f sliderColor, gl2d::Texture ballTexture, gl2d::Color4f ballColor)
+	{
+		name += idStr;
 
+		Widget widget = {};
+		widget.type = widgetType::sliderIntW;
+		widget.pointer = value;
+		widget.usedThisFrame = true;
+		widget.justCreated = true;
+		widget.minInt = min;
+		widget.maxInt = max;
+		widget.colors = sliderColor;
+		widget.colors2 = ballColor;
+		widget.texture = sliderTexture;
+		widget.textureOver = ballTexture;
+
+		widgetsVector.push_back({name, widget});
 	}
 
 	void colorPicker(std::string name, float *color3Component, gl2d::Texture sliderTexture, gl2d::Texture ballTexture)

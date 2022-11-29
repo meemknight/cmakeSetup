@@ -33,6 +33,9 @@ namespace glui
 	bool Toggle(std::string name,
 		const gl2d::Color4f colors, bool* toggle, const gl2d::Texture texture = {}, const gl2d::Texture overTexture = {});
 
+	//returns true if you should render it, clicked is optional
+	bool CustomWidget(int id, glm::vec4 *transform, bool *hovered = 0, bool *clicked = 0);
+
 	void Text(std::string name,
 		const gl2d::Color4f colors);
 
@@ -42,6 +45,10 @@ namespace glui
 	void sliderFloat(std::string name, float *value, float min, float max, 
 		gl2d::Texture sliderTexture = {}, gl2d::Color4f sliderColor = {1,1,1,1},
 		gl2d::Texture ballTexture = {}, gl2d::Color4f ballColor = {1,1,1,1} );
+
+	void sliderInt(std::string name, int *value, int min, int max,
+		gl2d::Texture sliderTexture = {}, gl2d::Color4f sliderColor = {1,1,1,1},
+		gl2d::Texture ballTexture = {}, gl2d::Color4f ballColor = {1,1,1,1});
 
 	void colorPicker(std::string name, float *color3Component, gl2d::Texture sliderTexture = {},
 		gl2d::Texture ballTexture = {});
