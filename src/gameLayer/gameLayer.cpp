@@ -253,11 +253,11 @@ bool gameLogic(float deltaTime)
 	{
 		deplasareMasinaPolitieY += deltaTime * 400;
 	}
-	else if (timer < 10.f)
+	else if (timer < 11.f)
 	{
 
 	}
-	else if (timer < 11)
+	else if (timer < 12)
 	{
 		deplasareMasinaPolitieY -= deltaTime * 400;
 	}
