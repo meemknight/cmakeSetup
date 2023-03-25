@@ -47,6 +47,7 @@ bool gameLogic(float deltaTime)
 
 	renderer.renderRectangle({100, 100, 100, 100}, Colors_Blue);
 		
+	ImGui::ShowDemoWindow();
 
 	renderer.flush();
 
