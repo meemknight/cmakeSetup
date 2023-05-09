@@ -1,4 +1,5 @@
 #https://github.com/meemknight/cmakeSetup
+#Version 1.0.0
 
 cmake_minimum_required(VERSION 3.16)
 
@@ -11,19 +12,19 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-add_subdirectory(thirdparty/glfw-3.3.2)
-add_subdirectory(thirdparty/glad)
-add_subdirectory(thirdparty/stb_image)
-add_subdirectory(thirdparty/stb_truetype)
-add_subdirectory(thirdparty/gl2d)
-add_subdirectory(thirdparty/raudio)
-add_subdirectory(thirdparty/glm)
-add_subdirectory(thirdparty/imgui-docking)
-add_subdirectory(thirdparty/safeSave)
-add_subdirectory(thirdparty/profilerLib)
-add_subdirectory(thirdparty/enet-1.3.17)
-add_subdirectory(thirdparty/glui)
-add_subdirectory(thirdparty/FastNoiseSIMD)
+add_subdirectory(thirdparty/glfw-3.3.2)			#window oppener
+add_subdirectory(thirdparty/glad)				#opengl loader
+add_subdirectory(thirdparty/stb_image)			#loading immaged
+add_subdirectory(thirdparty/stb_truetype)		#loading ttf files
+add_subdirectory(thirdparty/enet-1.3.17)		#networking
+add_subdirectory(thirdparty/raudio)				#audio
+add_subdirectory(thirdparty/glm)				#math
+add_subdirectory(thirdparty/imgui-docking)		#ui
+#----------V-----------------------V------------#my libraries												
+add_subdirectory(thirdparty/safeSave)			#saving data, designed for gamedev. It also makes backups so the player won't loose saves.
+add_subdirectory(thirdparty/profilerLib)		#profiling, just a simpe library for measuring elapsed time
+add_subdirectory(thirdparty/gl2d)				#2D rendering library
+add_subdirectory(thirdparty/glui)				#ui library, usefull for making game menus
 
 
 # Define MY_SOURCES to be a list of all the source files for my game 
@@ -52,16 +53,11 @@ if(MSVC) # If using the VS compiler...
 
 endif()
 
-if(WIN32)
-	target_compile_definitions("${CMAKE_PROJECT_NAME}" PUBLIC _WIN32) 
-  
-endif()
-
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/gameLayer/")
 target_include_directories("${CMAKE_PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/platform/")
 
 
 target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE glm glfw 
-	glad stb_image stb_truetype gl2d raudio imgui safeSave profilerLib enet glui fastNoiseSIMD)
+	glad stb_image stb_truetype gl2d raudio imgui safeSave profilerLib enet glui)
 

@@ -207,6 +207,13 @@ namespace platform
 		fullScreen = f;
 	}
 
+	glm::ivec2 getFrameBufferSize()
+	{
+		int x = 0; int y = 0;
+		glfwGetFramebufferSize(wind, &x, &y);
+		return {x, y};
+	}
+
 	glm::ivec2 getRelMousePosition()
 	{
 		double x = 0, y = 0;
@@ -315,7 +322,9 @@ int main()
 	glfwSetCursorPosCallback(wind, cursorPositionCallback);
 	glfwSetCharCallback(wind, characterCallback);
 
-	permaAssertComment(gladLoadGL(), "err initializing glad");
+	//permaAssertComment(gladLoadGL(), "err initializing glad");
+	permaAssertComment(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "err initializing glad");
+
 
 #pragma endregion
 
