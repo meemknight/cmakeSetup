@@ -21,11 +21,11 @@ gl2d::Renderer2D renderer;
 
 bool initGame()
 {
+	//initializing stuff for the renderer
 	gl2d::init();
-
 	renderer.create();
 
-
+	//loading the saved data. Loading an entire structure like this makes savind game data very easy.
 	platform::readEntireFile(RESOURCES_PATH "gameData.data", &gameData, sizeof(GameData));
 
 
@@ -38,8 +38,8 @@ bool gameLogic(float deltaTime)
 {
 #pragma region init stuff
 	int w = 0; int h = 0;
-	w = platform::getFrameBufferSizeX();
-	h = platform::getFrameBufferSizeY();
+	w = platform::getFrameBufferSizeX(); //window w
+	h = platform::getFrameBufferSizeY(); //window h
 	
 	glViewport(0, 0, w, h);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -81,9 +81,11 @@ bool gameLogic(float deltaTime)
 
 }
 
+//This function might not be be called if the program is forced closed
 void closeGame()
 {
 
+	//saved the data.
 	platform::writeEntireFile(RESOURCES_PATH "gameData.data", &gameData, sizeof(GameData));
 
 }
