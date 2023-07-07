@@ -70,10 +70,11 @@ bool gameLogic(float deltaTime)
 	renderer.renderRectangle({gameData.rectPos, 100, 100}, Colors_Blue);
 
 
-
-	ImGui::ShowDemoWindow();
-
 	renderer.flush();
+
+
+	//ImGui::ShowDemoWindow();
+
 
 	return true;
 #pragma endregion

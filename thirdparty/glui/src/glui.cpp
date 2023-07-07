@@ -22,12 +22,6 @@ namespace glui
 		return a;
 	}
 
-	void gluiInit()
-	{
-
-
-	}
-
 	enum widgetType
 	{
 		none = 0,
@@ -46,47 +40,9 @@ namespace glui
 		customWidget,
 	};
 
-	struct InputData
-	{
-		glm::ivec2 mousePos = {};
-		bool mouseClick = 0;
-		bool mouseHeld = 0;
-		bool mouseReleased = 0;
-		bool escapeReleased = 0;
+	
 
-	};
-
-	struct Widget
-	{
-		int type = 0;
-		bool justCreated = true;
-		bool usedThisFrame = 0;
-		InputData lastFrameData = {};
-		gl2d::Color4f colors = Colors_White;
-		gl2d::Color4f colors2 = Colors_White;
-		gl2d::Texture texture = {};
-		gl2d::Texture textureOver = {};
-		glm::vec4 textureCoords = {};
-		bool returnFromUpdate = 0;
-		bool customWidgetUsed = 0;
-		void *pointer = 0;
-		bool clicked = 0; //todo for all?
-		bool hovered = 0;
-		float min = 0;
-		float max = 0;
-		int minInt = 0;
-		int maxInt = 0;
-		glm::vec4 returnTransform = {};//todo mabe for every widget?
-
-		struct PersistentData
-		{
-			bool sliderBeingDragged = 0;
-			bool sliderBeingDragged2 = 0;
-			bool sliderBeingDragged3 = 0;
-		}pd;
-
-		size_t textSize = 0;
-	};
+	
 
 	bool aabb(glm::vec4 transform, glm::vec2 point)
 	{
@@ -105,11 +61,7 @@ namespace glui
 		}
 	}
 
-	std::vector<std::pair<std::string, Widget>> widgetsVector;
-
-	std::unordered_map<std::string, Widget> widgets;
-
-	std::string idStr;
+	
 
 	constexpr float pressDownSize = 0.04f;
 	constexpr float shadowSize = 0.1f;
@@ -229,6 +181,7 @@ namespace glui
 	}
 
 	//just z and w components of transform used
+	//todo: move into gl2d a function to render text of a size
 	float determineTextSize(gl2d::Renderer2D &renderer, const std::string &str, gl2d::Font &f, glm::vec4 transform, bool minimize = true)
 	{
 		auto newStr = getString(str);
@@ -355,13 +308,12 @@ namespace glui
 	{
 		auto newPos = computeTextureNewPosition(transform, t);
 
-		renderer.renderRectangle(newPos, c,
-			{}, 0.f, t);
+		renderer.renderRectangle(newPos, t, c);
 	}
 
 	void renderSliderFloat(gl2d::Renderer2D &renderer, glm::vec4 transform, float *value, float min, float max, 
 		bool &sliderBeingDragged,
-		gl2d::Texture barT, gl2d::Color4f barC, gl2d::Texture ballT, gl2d::Color4f ballC, InputData &input)
+		gl2d::Texture barT, gl2d::Color4f barC, gl2d::Texture ballT, gl2d::Color4f ballC, RendererUi::Internal::InputData &input)
 	{
 
 		float barSize = 7;
@@ -433,7 +385,7 @@ namespace glui
 
 	void renderSliderInt(gl2d::Renderer2D &renderer, glm::vec4 transform, int *value, int min, int max,
 		bool &sliderBeingDragged,
-		gl2d::Texture barT, gl2d::Color4f barC, gl2d::Texture ballT, gl2d::Color4f ballC, InputData &input)
+		gl2d::Texture barT, gl2d::Color4f barC, gl2d::Texture ballT, gl2d::Color4f ballC, RendererUi::Internal::InputData &input)
 	{
 
 		float barSize = 7;
@@ -508,9 +460,8 @@ namespace glui
 	int currentId = 0;
 	bool idWasSet = 0;
 
-	std::unordered_map<int, std::vector<std::string>> allMenuStacks;
 
-	void renderFrame(gl2d::Renderer2D& renderer, gl2d::Font& font, glm::ivec2 mousePos, bool mouseClick,
+	void RendererUi::renderFrame(gl2d::Renderer2D& renderer, gl2d::Font& font, glm::ivec2 mousePos, bool mouseClick,
 		bool mouseHeld, bool mouseReleased, bool escapeReleased, const std::string& typedInput, float deltaTime)
 	{
 		if (!idWasSet)
@@ -519,10 +470,10 @@ namespace glui
 		}
 		//find the menu stack for this Begin()
 		
-		auto iterMenuStack = allMenuStacks.find(currentId);
-		if (iterMenuStack == allMenuStacks.end())
+		auto iterMenuStack = internal.allMenuStacks.find(currentId);
+		if (iterMenuStack == internal.allMenuStacks.end())
 		{
-			iterMenuStack = allMenuStacks.insert({currentId, {}}).first;
+			iterMenuStack = internal.allMenuStacks.insert({currentId, {}}).first;
 		}
 		auto &currentMenuStack = iterMenuStack->second;
 
@@ -541,7 +492,7 @@ namespace glui
 		}
 
 		//clear some data
-		for (auto &i : widgets)
+		for (auto &i : internal.widgets)
 		{
 			if (i.second.type == widgetType::customWidget)
 			{
@@ -549,8 +500,8 @@ namespace glui
 			}
 		}
 
-		std::vector<std::pair<std::string, Widget>> widgetsCopy;
-		widgetsCopy.reserve(widgetsVector.size());
+		std::vector<std::pair<std::string, Internal::Widget>> widgetsCopy;
+		widgetsCopy.reserve(internal.widgetsVector.size());
 
 		auto currentMenuStackCopy = currentMenuStack;
 		{
@@ -569,7 +520,7 @@ namespace glui
 			int nextStackSizeToLook = 0;
 			int nextStackSizeToLookMin = 0;
 
-			for (auto& i : widgetsVector)
+			for (auto& i : internal.widgetsVector)
 			{
 
 				if (i.second.type == widgetType::beginMenu)
@@ -693,7 +644,7 @@ namespace glui
 		auto camera = renderer.currentCamera;
 		renderer.currentCamera.setDefault();
 
-		InputData input = {};
+		Internal::InputData input = {};
 		input.mousePos = mousePos;
 		input.mouseClick = mouseClick;
 		input.mouseHeld = mouseHeld;
@@ -704,14 +655,14 @@ namespace glui
 		for (auto& i : widgetsCopy)
 		{
 
-			auto find = widgets.find(i.first);
+			auto find = internal.widgets.find(i.first);
 
-			if (find == widgets.end())
+			if (find == internal.widgets.end())
 			{
 				
 				i.second.usedThisFrame = true;
 				i.second.justCreated = true;
-				widgets.insert(i);
+				internal.widgets.insert(i);
 				
 				//continue;
 			}
@@ -739,7 +690,7 @@ namespace glui
 			}
 
 			{
-				auto &j = *widgets.find(i.first);
+				auto &j = *internal.widgets.find(i.first);
 				auto& widget = j.second;
 
 				auto drawButton = [&]()
@@ -1123,9 +1074,9 @@ namespace glui
 		
 		//clear unused data
 		{
-			std::unordered_map<std::string, Widget> widgets2;
-			widgets2.reserve(widgets.size());
-			for (auto& i : widgets)
+			std::unordered_map<std::string, Internal::Widget> widgets2;
+			widgets2.reserve(internal.widgets.size());
+			for (auto& i : internal.widgets)
 			{
 				if (i.second.usedThisFrame)
 				{
@@ -1133,36 +1084,36 @@ namespace glui
 					widgets2.insert(i);
 				}
 			}
-			widgets = std::move(widgets2);
+			internal.widgets = widgets2;
 		}
 
 		
 		renderer.currentCamera = camera;
 
-		widgetsVector.clear();
+		internal.widgetsVector.clear();
 
-		if (!idStr.empty())
+		if (!internal.idStr.empty())
 		{
 			errorFunc("More pushes than pops");
 		}
-		idStr.clear();
+		internal.idStr.clear();
 
 	}
 
-	bool Button(std::string name, const gl2d::Color4f colors, const gl2d::Texture texture)
+	bool RendererUi::Button(std::string name, const gl2d::Color4f colors, const gl2d::Texture texture)
 	{
-		name += idStr;
+		name += internal.idStr;
 
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::button;
 		widget.colors = colors;
 		widget.texture = texture;
 		widget.usedThisFrame = true;
 		widget.justCreated = true;
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 
-		auto find = widgets.find(name);
-		if (find != widgets.end())
+		auto find = internal.widgets.find(name);
+		if (find != internal.widgets.end())
 		{
 			return find->second.returnFromUpdate;
 		}
@@ -1173,9 +1124,9 @@ namespace glui
 		
 	}
 
-	void Texture(int id, gl2d::Texture t, gl2d::Color4f colors, glm::vec4 textureCoords)
+	void RendererUi::Texture(int id, gl2d::Texture t, gl2d::Color4f colors, glm::vec4 textureCoords)
 	{
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::texture;
 		widget.texture = t;
 		widget.colors = colors;
@@ -1183,12 +1134,12 @@ namespace glui
 		widget.usedThisFrame = true;
 		widget.justCreated = true;
 
-		widgetsVector.push_back({"##$texture" + std::to_string(id), widget});
+		internal.widgetsVector.push_back({"##$texture" + std::to_string(id), widget});
 	}
 
-	bool ButtonWithTexture(int id, gl2d::Texture t, gl2d::Color4f colors, glm::vec4 textureCoords)
+	bool RendererUi::ButtonWithTexture(int id, gl2d::Texture t, gl2d::Color4f colors, glm::vec4 textureCoords)
 	{
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::buttonWithTexture;
 		widget.texture = t;
 		widget.colors = colors;
@@ -1198,10 +1149,10 @@ namespace glui
 
 		std::string name = "##$textureWithId:" + std::to_string(id);
 
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 
-		auto find = widgets.find(name);
-		if (find != widgets.end())
+		auto find = internal.widgets.find(name);
+		if (find != internal.widgets.end())
 		{
 			return find->second.returnFromUpdate;
 		}
@@ -1212,11 +1163,11 @@ namespace glui
 
 	}
 
-	bool Toggle(std::string name, const gl2d::Color4f colors, bool* toggle, const gl2d::Texture texture, const gl2d::Texture overTexture)
+	bool RendererUi::Toggle(std::string name, const gl2d::Color4f colors, bool* toggle, const gl2d::Texture texture, const gl2d::Texture overTexture)
 	{
-		name += idStr;
+		name += internal.idStr;
 
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::toggle;
 		widget.colors = colors;
 		widget.texture = texture;
@@ -1224,10 +1175,10 @@ namespace glui
 		widget.usedThisFrame = true;
 		widget.justCreated = true;
 		widget.pointer = toggle;
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 
-		auto find = widgets.find(name);
-		if (find != widgets.end())
+		auto find = internal.widgets.find(name);
+		if (find != internal.widgets.end())
 		{
 			return find->second.returnFromUpdate;
 		}
@@ -1238,18 +1189,18 @@ namespace glui
 
 	}
 
-	bool CustomWidget(int id, glm::vec4 *transform, bool *hovered, bool *clicked)
+	bool RendererUi::CustomWidget(int id, glm::vec4 *transform, bool *hovered, bool *clicked)
 	{
 		std::string name = "##$customWidgetWithId:" + std::to_string(id);
 
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::customWidget;
 		widget.pointer = transform;
 
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 
-		auto find = widgets.find(name);
-		if (find != widgets.end())
+		auto find = internal.widgets.find(name);
+		if (find != internal.widgets.end())
 		{
 			*transform = find->second.returnTransform;
 
@@ -1269,24 +1220,24 @@ namespace glui
 		}
 	}
 
-	void Text(std::string name, const gl2d::Color4f colors)
+	void RendererUi::Text(std::string name, const gl2d::Color4f colors)
 	{
-		name += idStr;
+		name += internal.idStr;
 
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::text;
 		widget.colors = colors;
 		widget.usedThisFrame = true;
 		widget.justCreated = true;
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 	}
 
-	void InputText(std::string name, char* text, size_t textSizeWithNullChar, 
+	void RendererUi::InputText(std::string name, char* text, size_t textSizeWithNullChar,
 		gl2d::Color4f color, const gl2d::Texture texture)
 	{
-		name += idStr;
+		name += internal.idStr;
 
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::textInput;
 		widget.pointer = text;
 		widget.colors = color;
@@ -1294,16 +1245,16 @@ namespace glui
 		widget.texture = texture;
 		widget.usedThisFrame = true;
 		widget.justCreated = true;
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 	}
 
-	void sliderFloat(std::string name, float *value, float min, float max,
+	void RendererUi::sliderFloat(std::string name, float *value, float min, float max,
 		gl2d::Texture sliderTexture, gl2d::Color4f sliderColor,
 		gl2d::Texture ballTexture, gl2d::Color4f ballColor)
 	{
-		name += idStr;
+		name += internal.idStr;
 
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::sliderFloatW;
 		widget.pointer = value;
 		widget.usedThisFrame = true;
@@ -1315,15 +1266,15 @@ namespace glui
 		widget.texture = sliderTexture;
 		widget.textureOver = ballTexture;
 
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 	}
 
-	void sliderInt(std::string name, int *value, int min, int max,
+	void RendererUi::sliderInt(std::string name, int *value, int min, int max,
 		gl2d::Texture sliderTexture, gl2d::Color4f sliderColor, gl2d::Texture ballTexture, gl2d::Color4f ballColor)
 	{
-		name += idStr;
+		name += internal.idStr;
 
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::sliderIntW;
 		widget.pointer = value;
 		widget.usedThisFrame = true;
@@ -1335,84 +1286,84 @@ namespace glui
 		widget.texture = sliderTexture;
 		widget.textureOver = ballTexture;
 
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 	}
 
-	void colorPicker(std::string name, float *color3Component, gl2d::Texture sliderTexture, gl2d::Texture ballTexture)
+	void RendererUi::colorPicker(std::string name, float *color3Component, gl2d::Texture sliderTexture, gl2d::Texture ballTexture)
 	{
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::colorPickerW;
 		widget.pointer = color3Component;
 		widget.texture = sliderTexture;
 		widget.textureOver = ballTexture;
 
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 
 	}
 
-	void newColum(int id)
+	void RendererUi::newColum(int id)
 	{
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::newColumW;
 
-		widgetsVector.push_back({"##$colum" + std::to_string(id), widget});
+		internal.widgetsVector.push_back({"##$colum" + std::to_string(id), widget});
 	}
 
-	void PushId(int id)
+	void RendererUi::PushId(int id)
 	{
 		char a = *(((char*)&id) + 0);
 		char b = *(((char*)&id) + 1);
 		char c = *(((char*)&id) + 2);
 		char d = *(((char*)&id) + 3);
 
-		idStr.push_back('#');
-		idStr.push_back('#');
-		idStr.push_back(a);
-		idStr.push_back(b);
-		idStr.push_back(c);
-		idStr.push_back(d);
+		internal.idStr.push_back('#');
+		internal.idStr.push_back('#');
+		internal.idStr.push_back(a);
+		internal.idStr.push_back(b);
+		internal.idStr.push_back(c);
+		internal.idStr.push_back(d);
 	}
 
-	void PushIdInternal(int id)
+	void PushIdInternal(RendererUi &r, int id)
 	{
-		idStr.push_back('#');
-		PushId(id);
+		r.internal.idStr.push_back('#');
+		r.PushId(id);
 	}
 
-	void PopIdInternal()
+	void PopIdInternal(RendererUi &r)
 	{
-		PopId();
+		r.PopId();
 
-		if (idStr.empty())
+		if (r.internal.idStr.empty())
 		{
 			errorFunc("More pops than pushes or inconsistent usage of begin end");
 			return;
 		}
 		else
 		{
-			if (idStr.back() != '#')
+			if (r.internal.idStr.back() != '#')
 			{
 				errorFunc("Inconsistent usage of begin end push pop");
 				return;
 			}
-			idStr.pop_back();
+			r.internal.idStr.pop_back();
 		}
 	}
 
-	void PopId()
+	void RendererUi::PopId()
 	{
-		if (idStr.size() < 6)
+		if (internal.idStr.size() < 6)
 		{
 			errorFunc("More pops than pushes or inconsistent usage of begin end");
 			return;
 		}
 
-		idStr.pop_back();
-		idStr.pop_back();
-		idStr.pop_back();
-		idStr.pop_back();
-		idStr.pop_back();
-		idStr.pop_back();
+		internal.idStr.pop_back();
+		internal.idStr.pop_back();
+		internal.idStr.pop_back();
+		internal.idStr.pop_back();
+		internal.idStr.pop_back();
+		internal.idStr.pop_back();
 	}
 
 	int hash(const std::string &s)
@@ -1428,33 +1379,33 @@ namespace glui
 		return h;
 	}
 
-	void BeginMenu(std::string name, const gl2d::Color4f colors, const gl2d::Texture texture)
+	void RendererUi::BeginMenu(std::string name, const gl2d::Color4f colors, const gl2d::Texture texture)
 	{
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::beginMenu;
 		widget.colors = colors;
 		widget.texture = texture;
 		widget.usedThisFrame = true;
 		widget.justCreated = true;
-		widgetsVector.push_back({name, widget});
+		internal.widgetsVector.push_back({name, widget});
 
-		PushIdInternal(hash(name));
+		PushIdInternal(*this, hash(name));
 	}
 
-	void EndMenu()
+	void RendererUi::EndMenu()
 	{
-		Widget widget = {};
+		Internal::Widget widget = {};
 		widget.type = widgetType::endMenu;
 		widget.usedThisFrame = true;
 		widget.justCreated = true;
-		widgetsVector.push_back({"", widget});
+		internal.widgetsVector.push_back({"", widget});
 
-		PopIdInternal();
+		PopIdInternal(*this);
 	}
 
 	//todo change ids to be unsigned and long + better hahs function
 
-	void Begin(int id)
+	void RendererUi::Begin(int id)
 	{
 		if (!idWasSet)
 		{
@@ -1474,14 +1425,198 @@ namespace glui
 		}
 
 		//will still push even if id was set so we don't get errors from inconsistent pushes
-		PushIdInternal(id);
+		PushIdInternal(*this, id);
 	}
 
-	void End()
+	void RendererUi::End()
+	{
+		PopIdInternal(*this);
+	}
+
+
+	//frames 
+
+	static int xPadd = 0;
+	static int yPadd = 0;
+	static int width = 0;
+	static int height = 0;
+
+	Frame::Frame(glm::ivec4 size)
+	{
+		this->loaded = 1;
+		lastW = width;
+		lastH = height;
+		lastX = xPadd;
+		lastY = yPadd;
+
+		width = size.z;
+		height = size.w;
+		xPadd = size.x;
+		yPadd = size.y;
+	}
+
+	Frame::~Frame()
+	{
+		if (loaded)
+		{
+			width = lastW;
+			height = lastH;
+			xPadd = lastX;
+			yPadd = lastY;
+		}
+	}
+
+	//todo fix frame
+	glm::ivec4 Box::operator()()
 	{
 
-		PopIdInternal();
-		
+		if (dimensionsState == 1)
+		{
+			dimensions.w = dimensions.z * aspect;
+		}
+		else
+			if (dimensionsState == 2)
+			{
+				dimensions.z = dimensions.w * aspect;
+			}
+
+		if (XcenterState == -1)
+		{
+			dimensions.x += xPadd;
+		}
+		if (YcenterState == -1)
+		{
+			dimensions.y += yPadd;
+		}
+
+		if (XcenterState == 1)
+		{
+			dimensions.x += xPadd + (width / 2) - (dimensions.z / 2);
+		}
+		if (YcenterState == 1)
+		{
+			dimensions.y += yPadd + (height / 2) - (dimensions.w / 2);
+		}
+
+		if (XcenterState == 2)
+		{
+			dimensions.x += xPadd + width - dimensions.z;
+		}
+
+		if (YcenterState == 2)
+		{
+			dimensions.y += yPadd + height - dimensions.w;
+		}
+
+
+		return dimensions;
 	}
+
+	Box &Box::xDistancePixels(int dist)
+	{
+		dimensions.x = dist;
+		XcenterState = 0;
+		return *this;
+	}
+
+	Box &Box::yDistancePixels(int dist)
+	{
+		dimensions.y = dist;
+		YcenterState = 0;
+		return *this;
+	}
+
+	Box &Box::xCenter(int dist)
+	{
+		dimensions.x = dist;
+		XcenterState = 1;
+		return *this;
+	}
+	Box &Box::yCenter(int dist)
+	{
+		dimensions.y = dist;
+		YcenterState = 1;
+		return *this;
+	}
+	Box &Box::xLeft(int dist)
+	{
+		dimensions.x = dist;
+		XcenterState = -1;
+		return *this;
+	}
+	Box &Box::xLeftPerc(float perc)
+	{
+		xLeft(perc * width);
+		return *this;
+	}
+	Box &Box::yTop(int dist)
+	{
+		dimensions.y = dist;
+		YcenterState = -1;
+		return *this;
+	}
+	Box &Box::yTopPerc(float perc)
+	{
+		yTop(perc * height);
+		return *this;
+	}
+	Box &Box::xRight(int dist)
+	{
+		dimensions.x = dist;
+		XcenterState = 2;
+		return *this;
+	}
+	Box &Box::yBottom(int dist)
+	{
+		dimensions.y = dist;
+		YcenterState = 2;
+		return *this;
+	}
+	Box &Box::xDimensionPixels(int dim)
+	{
+		dimensionsState = 0;
+		dimensions.z = dim;
+		return *this;
+	}
+	Box &Box::yDimensionPixels(int dim)
+	{
+		dimensionsState = 0;
+		dimensions.w = dim;
+		return *this;
+	}
+	Box &Box::xDimensionPercentage(float p)
+	{
+		dimensionsState = 0;
+		dimensions.z = p * width;
+		return *this;
+
+	}
+	Box &Box::yDimensionPercentage(float p)
+	{
+		dimensionsState = 0;
+		dimensions.w = p * height;
+		return *this;
+	}
+	Box &Box::xAspectRatio(float r)
+	{
+		dimensionsState = 2;
+		aspect = r;
+		return *this;
+	}
+	Box &Box::yAspectRatio(float r)
+	{
+		dimensionsState = 1;
+		aspect = r;
+		return *this;
+	}
+
+	bool isInButton(const glm::vec2 &p, const glm::vec4 &box)
+	{
+		return(p.x >= box.x && p.x <= box.x + box.z
+			&&
+			p.y >= box.y && p.y <= box.y + box.w
+			);
+	}
+
 
 };
