@@ -1,0 +1,2 @@
+/usr/bin/ar qc libglui.a CMakeFiles/glui.dir/src/glui.cpp.o
+/usr/bin/ranlib libglui.a

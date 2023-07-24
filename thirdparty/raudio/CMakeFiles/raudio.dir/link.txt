@@ -1,0 +1,2 @@
+/usr/bin/ar qc libraudio.a CMakeFiles/raudio.dir/src/raudio.c.o
+/usr/bin/ranlib libraudio.a

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libstb_truetype.a CMakeFiles/stb_truetype.dir/src/stb_truetype.cpp.o
+/usr/bin/ranlib libstb_truetype.a
