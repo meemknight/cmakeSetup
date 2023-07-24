@@ -114,18 +114,17 @@ void platform::internal::updateAllButtons(float deltaTime)
 
 			if (glfwGetGamepadState(i, &state))
 			{
-				for (int i = 0; i <= GLFW_GAMEPAD_BUTTON_LAST; i++)
+				for (int b = 0; b <= GLFW_GAMEPAD_BUTTON_LAST; b++)
 				{
-					if(state.buttons[i] == GLFW_PRESS)
+					if(state.buttons[b] == GLFW_PRESS)
 					{
-						processEventButton(controllerButtons.buttons[i], 1);
+						processEventButton(controllerButtons.buttons[b], 1);
 					}else
-					if (state.buttons[i] == GLFW_RELEASE)
+					if (state.buttons[b] == GLFW_RELEASE)
 					{
-						processEventButton(controllerButtons.buttons[i], 0);
+						processEventButton(controllerButtons.buttons[b], 0);
 					}
-					updateButton(controllerButtons.buttons[i], deltaTime);
-
+					updateButton(controllerButtons.buttons[b], deltaTime);
 				}
 				
 				controllerButtons.LT = state.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
@@ -143,7 +142,6 @@ void platform::internal::updateAllButtons(float deltaTime)
 		}
 
 	}
-
 
 }
 

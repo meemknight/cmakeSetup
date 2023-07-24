@@ -18,8 +18,6 @@ struct GameData
 }gameData;
 
 gl2d::Renderer2D renderer;
-gl2d::Texture t;
-gl2d::Font f;
 
 bool initGame()
 {
@@ -30,9 +28,6 @@ bool initGame()
 	//loading the saved data. Loading an entire structure like this makes savind game data very easy.
 	platform::readEntireFile(RESOURCES_PATH "gameData.data", &gameData, sizeof(GameData));
 
-
-	t.loadFromFile(RESOURCES_PATH "test.jpg", true);
-	f.createFromFile(RESOURCES_PATH "roboto_black.ttf");
 
 	return true;
 }
@@ -72,13 +67,17 @@ bool gameLogic(float deltaTime)
 	}
 
 	gameData.rectPos = glm::clamp(gameData.rectPos, glm::vec2{0,0}, glm::vec2{w - 100,h - 100});
-	renderer.renderRectangle({gameData.rectPos, 100, 100}, t);
+	renderer.renderRectangle({gameData.rectPos, 100, 100}, Colors_Blue);
 
-	renderer.renderText({200, 200}, "Hello my first game", f, Colors_White);
+
+
+	gl2d::TextureAtlasPadding atlas(10,0, 64, 64);
+	gl2d::Texture t;
+	t.loadFromFileWithPixelPadding(RESOURCES_PATH "texture.png", 64);
+	renderer.renderRectangle({gameData.rectPos, 100, 100}, t, Colors_Blue, {}, 0, atlas.get(1,0));
 
 
 	renderer.flush();
-
 
 
 	//ImGui::ShowDemoWindow();
