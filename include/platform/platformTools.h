@@ -196,3 +196,215 @@
 #endif
 
 #endif
+
+
+
+
+#if PRODUCTION_BUILD == 0
+#define FORCE_LOG 
+#endif
+
+#include <iostream>
+#include <sstream>
+
+#ifdef ERRORS_ONLY
+#undef FORCE_LOG
+#endif // ERRORS_ONLY
+
+#ifndef _WIN32
+#else
+#define NOMINMAX
+#include <Windows.h>
+
+#endif
+
+#ifdef FORCE_LOG
+	inline void llog()
+	{
+		std::cout << "\n";
+	}
+
+	template<class F, class ...T>
+	inline void llog(F f, T ...args)
+	{
+		std::cout << f << " ";
+		llog(args...);
+	}
+#else
+	template<class F, class ...T>
+	inline void llog(F f, T ...args)
+	{
+
+	}
+#endif
+
+	///warning log
+#ifdef FORCE_LOG
+	inline void wlog()
+	{
+		std::cout << "\n";
+	#ifdef _WIN32
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+	#endif
+	}
+
+	template<class F, class ...T>
+	inline void wlog(F f, T ...args)
+	{
+	#ifdef _WIN32
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 14);
+	#endif
+		std::cout << f << " ";
+		wlog(args...);
+	}
+#else
+	template<class F, class ...T>
+	inline void wlog(F f, T ...args)
+	{
+
+	}
+#endif
+
+	///important log
+#ifdef FORCE_LOG
+	inline void ilog()
+	{
+		std::cout << "\n";
+	#ifdef _WIN32
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+	#endif
+
+	}
+
+	template<class F, class ...T>
+	inline void ilog(F f, T ...args)
+	{
+	#ifdef _WIN32
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 9);
+	#endif
+
+		std::cout << f << " ";
+		ilog(args...);
+	}
+#else
+	template<class F, class ...T>
+	inline void ilog(F f, T ...args)
+	{
+
+	}
+#endif
+
+	///good log
+#ifdef FORCE_LOG
+	inline void glog()
+	{
+		std::cout << "\n";
+	#ifdef _WIN32
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+	#endif
+
+	}
+
+	template<class F, class ...T>
+	inline void glog(F f, T ...args)
+	{
+	#ifdef _WIN32
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 10);
+	#endif
+
+		std::cout << f << " ";
+		glog(args...);
+	}
+#else
+	template<class F, class ...T>
+	inline void glog(F f, T ...args)
+	{
+
+	}
+#endif
+
+	///error log
+#ifdef FORCE_LOG
+	inline void elog()
+	{
+		std::cout << "\n";
+	#ifdef _WIN32
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+	#endif
+
+	}
+
+	template<class F, class ...T>
+	inline void elog(F f, T ...args)
+	{
+	#ifdef _WIN32
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 12);
+	#endif
+
+		std::cout << f << " ";
+		elog(args...);
+	}
+#else
+
+#ifdef ERRORS_ONLY
+
+	inline void elog(std::stringstream &&stream)
+	{
+	#ifdef _WIN32
+		MessageBoxA(0, stream.str().c_str(), "error", MB_ICONERROR);
+	#endif
+
+	}
+
+	template<class F, class ...T>
+	inline void elog(std::stringstream &&stream, F &&f, T &&...args)
+	{
+		stream << std::forward<F>(f) << " ";
+
+		elog(std::move(stream), args...);
+	}
+
+	template<class F, class ...T>
+	inline void elog(F &&f, T &&...args)
+	{
+		std::stringstream stream;
+
+		stream << std::forward<F>(f) << " ";
+
+		elog(std::move(stream), args...);
+	}
+
+
+#else
+	template<class F, class ...T>
+	inline void elog(F f, T ...args)
+	{
+		std::stringstream stream;
+
+		stream << std::forward<F>(f) << " ";
+
+		elog(std::move(stream), args...);
+	}
+
+	template<class F, class ...T>
+	inline void elog(std::stringstream &&stream, F &&f, T &&...args)
+	{
+		stream << std::forward<F>(f) << " ";
+
+		elog(std::move(stream), args...);
+	}
+
+#include <fstream>
+	inline void elog(std::stringstream &&stream)
+	{
+		std::ofstream f(RESOURCES_PATH "../errorLogs.txt", std::ios::app);
+
+		f << stream.str() << "\n";
+
+		f.close();
+	}
+
+
+#endif
+
+#endif
