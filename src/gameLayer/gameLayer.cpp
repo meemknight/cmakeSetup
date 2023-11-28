@@ -9,7 +9,7 @@
 #include <sstream>
 #include "imfilebrowser.h"
 #include <gl2d/gl2d.h>
-
+#include <platformTools.h>
 
 struct GameData
 {
@@ -45,7 +45,6 @@ bool gameLogic(float deltaTime)
 	glClear(GL_COLOR_BUFFER_BIT); //clear screen
 
 	renderer.updateWindowMetrics(w, h);
-
 #pragma endregion
 
 

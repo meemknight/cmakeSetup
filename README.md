@@ -42,10 +42,11 @@ After you add a file, the changes should be automatically added but if you want 
 
   gameLayer.cpp has the game main loop. Add your files in scr/gamelayer and include/gamelayer.
   Look at the example provided to see how to acces user input.
+  Also you have to use the RESOURCES_PATH macro to get to your assets path.
 
   [FULL EXAMPLE VIDEO!](https://www.youtube.com/watch?v=zJoXMfCI9LM)
   
 # Configurations:
 
-  1. In Cmakelists.txt you can set the RESOURCES_PATH macro to the root folder for sharing the compiled program. By default, it is the absolute path to the assets folder for ease of development.
-  2. In tools.h you cand change INTERNAL_BUILD to 0 when sharing the exe so the custom asserts don't let the user continue debugging or using the program after a failed assertion.
+
+  Cmakelists.txt, set the PRODUCTION_BUILD flag to ON to build a shippable version of your game. This will change the file paths to be relative to your exe (RESOURCES_PATH macro), will remove the console, and also will change the aserts to not allow people to debug them.

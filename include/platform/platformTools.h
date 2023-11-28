@@ -2,7 +2,6 @@
 #define TOOLS_H_INCLUDE
 
 
-#include "config.h"
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
@@ -111,7 +110,7 @@
 			}
 			case IDIGNORE: // Return control to caller
 			{
-				return;
+				return; 
 			}
 			default: // This should not happen; treat as fatal error:
 			{
@@ -121,7 +120,7 @@
 	
 	}
 	
-	#if INTERNAL_BUILD == 1
+	#if PRODUCTION_BUILD == 0
 	
 		#define permaAssert(expression) (void)(											\
 					(!!(expression)) ||												\
@@ -172,7 +171,7 @@
 	}
 
 
-	#if INTERNAL_BUILD == 1
+	#if PRODUCTION_BUILD == 0
 	
 		#define permaAssert(expression) (void)(											\
 					(!!(expression)) ||												\

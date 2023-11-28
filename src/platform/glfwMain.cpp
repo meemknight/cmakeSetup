@@ -6,7 +6,6 @@
 #include <iostream>
 #include <ctime>
 #include "platformTools.h"
-#include "config.h"
 #include <raudio.h>
 #include "platformInput.h"
 #include "otherPlatformFunctions.h"
@@ -293,7 +292,7 @@ int main()
 
 #ifdef _WIN32
 #ifdef _MSC_VER 
-#if INTERNAL_BUILD
+#if PRODUCTION_BUILD == 0
 	AllocConsole();
 	(void)freopen("conin$", "r", stdin);
 	(void)freopen("conout$", "w", stdout);
