@@ -309,6 +309,14 @@ int main()
 	permaAssertComment(glfwInit(), "err initializing glfw");
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
+#ifdef __APPLE__
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, 1);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+#endif
+
+
 	int w = 500;
 	int h = 500;
 	wind = glfwCreateWindow(w, h, "geam", nullptr, nullptr);

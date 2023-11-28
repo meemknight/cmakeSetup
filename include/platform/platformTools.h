@@ -137,14 +137,11 @@
 	
 		#define permaAssert(expression) (void)(											\
 					(!!(expression)) ||												\
-					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__)), 0)	\
-				)
+					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__)), 0)	)
 		
 		#define permaAssertComment(expression, comment) (void)(								\
 					(!!(expression)) ||														\
-					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__), comment), 1)	\
-
-				)
+					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__), comment), 1)	)
 		
 	#endif
 	
@@ -179,27 +176,21 @@
 	
 		#define permaAssert(expression) (void)(											\
 					(!!(expression)) ||												\
-					(assertFuncInternal(#expression, __FILE__, (unsigned)(__LINE__)), 0)	\
-				)
+					(assertFuncInternal(#expression, __FILE__, (unsigned)(__LINE__)), 0)	)
 		
 		#define permaAssertComment(expression, comment) (void)(								\
 					(!!(expression)) ||														\
-					(assertFuncInternal(#expression, __FILE__, (unsigned)(__LINE__), comment), 1)\
-				)
+					(assertFuncInternal(#expression, __FILE__, (unsigned)(__LINE__), comment), 1))
 		
 	#else
 	
 		#define permaAssert(expression) (void)(											\
 					(!!(expression)) ||												\
-					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__)), 0)	\
-				)
+					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__)), 0)	)
 		
 		#define permaAssertComment(expression, comment) (void)(								\
 					(!!(expression)) ||														\
-					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__), comment), 1)	\
-
-				)
-		
+					(assertFuncProduction(#expression, __FILE__, (unsigned)(__LINE__), comment), 1) )
 	#endif
 
 
