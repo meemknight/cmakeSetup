@@ -48,26 +48,25 @@ bool gameLogic(float deltaTime)
 #pragma endregion
 
 
-	if (platform::isKeyHeld(platform::Button::Left))
+	if (platform::isButtonHeld(platform::Button::Left))
 	{
 		gameData.rectPos.x -= deltaTime * 50;
 	}
-	if (platform::isKeyHeld(platform::Button::Right))
+	if (platform::isButtonHeld(platform::Button::Right))
 	{
 		gameData.rectPos.x += deltaTime * 50;
 	}
-	if (platform::isKeyHeld(platform::Button::Up))
+	if (platform::isButtonHeld(platform::Button::Up))
 	{
 		gameData.rectPos.y -= deltaTime * 50;
 	}
-	if (platform::isKeyHeld(platform::Button::Down))
+	if (platform::isButtonHeld(platform::Button::Down))
 	{
 		gameData.rectPos.y += deltaTime * 50;
 	}
 
 	gameData.rectPos = glm::clamp(gameData.rectPos, glm::vec2{0,0}, glm::vec2{w - 100,h - 100});
 	renderer.renderRectangle({gameData.rectPos, 100, 100}, Colors_Blue);
-
 
 
 

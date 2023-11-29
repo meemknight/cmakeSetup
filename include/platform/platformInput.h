@@ -100,10 +100,10 @@ namespace platform
 
 	
 	//Button::key
-	int isKeyHeld(int key);
-	int isKeyPressedOn(int key);
-	int isKeyReleased(int key);
-	int isKeyTyped(int key);
+	int isButtonHeld(int key);
+	int isButtonPressedOn(int key);
+	int isButtonReleased(int key);
+	int isButtonTyped(int key);
 
 	int isLMousePressed();
 	int isRMousePressed();

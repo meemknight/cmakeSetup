@@ -7,28 +7,28 @@ platform::Button rightMouse;
 platform::ControllerButtons controllerButtons;
 std::string typedInput;
 
-int platform::isKeyHeld(int key)
+int platform::isButtonHeld(int key)
 {
 	if (key < Button::A || key >= Button::BUTTONS_COUNT) { return 0; }
 
 	return keyBoard[key].held;
 }
 
-int platform::isKeyPressedOn(int key)
+int platform::isButtonPressedOn(int key)
 {
 	if (key < Button::A || key >= Button::BUTTONS_COUNT) { return 0; }
 
 	return keyBoard[key].pressed;
 }
 
-int platform::isKeyReleased(int key)
+int platform::isButtonReleased(int key)
 {
 	if (key < Button::A || key >= Button::BUTTONS_COUNT) { return 0; }
 
 	return keyBoard[key].released;
 }
 
-int platform::isKeyTyped(int key)
+int platform::isButtonTyped(int key)
 {
 	if (key < Button::A || key >= Button::BUTTONS_COUNT) { return 0; }
 
