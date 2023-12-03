@@ -27,8 +27,7 @@ bool initGame()
 
 	//loading the saved data. Loading an entire structure like this makes savind game data very easy.
 	platform::readEntireFile(RESOURCES_PATH "gameData.data", &gameData, sizeof(GameData));
-
-
+	
 	return true;
 }
 
@@ -67,7 +66,6 @@ bool gameLogic(float deltaTime)
 
 	gameData.rectPos = glm::clamp(gameData.rectPos, glm::vec2{0,0}, glm::vec2{w - 100,h - 100});
 	renderer.renderRectangle({gameData.rectPos, 100, 100}, Colors_Blue);
-
 
 
 	renderer.flush();
