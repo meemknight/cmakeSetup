@@ -2,7 +2,14 @@
 
 ---
 
-This is a cmake setup that loads glfw, opengl, stb_image, stb_truetype and a custom 2d library. It works both on windows and linux.
+## What is it?
+
+This is a CMake setup that loads glfw, OpenGL, stb_image, stb_truetype, and a custom 2d library. It works both on Windows and Linux.
+
+## Why use cmakeSetup?
+
+All I do is configure the project in a good way. It is cross-platform, easy to add libraries, and the input and window opening are implemented. All the rest is up to you, with no weird abstractions, you get the init() update(), and close() functions and you do whatever you want with them.
+
 
 ![](https://github.com/meemknight/photos/blob/master/cmakeSetup1.png)
 ---
