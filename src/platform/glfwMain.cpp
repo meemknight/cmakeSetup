@@ -19,6 +19,7 @@
 #include "gameLayer.h"
 #include <fstream>
 #include <chrono>
+#include "errorReporting.h"
 
 #define REMOVE_IMGUI 0
 
@@ -339,6 +340,7 @@ int main()
 	//permaAssertComment(gladLoadGL(), "err initializing glad");
 	permaAssertComment(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "err initializing glad");
 
+	enableReportGlErrors();
 
 #pragma endregion
 
