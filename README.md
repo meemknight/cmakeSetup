@@ -15,6 +15,8 @@ All I do is configure the project in a good way. It is cross-platform, easy to a
 ---
 
   [FULL EXAMPLE VIDEO!](https://www.youtube.com/watch?v=zJoXMfCI9LM)
+  [LONGER VERSION!!](https://www.youtube.com/watch?v=XOs2qynEmNE)
+  [VIDEO ABOUT THE SETUP](https://www.youtube.com/watch?v=K8f73k9HM8M)
 
 ---
 
