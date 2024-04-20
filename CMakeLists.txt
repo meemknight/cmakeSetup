@@ -48,7 +48,7 @@ add_subdirectory(thirdparty/glui)				#ui library, usefull for making game menus
 
 
 # MY_SOURCES is defined to be a list of all the source files for my game 
-# DON'T ADD THE SOURCES BY HAND they are already added with this macro
+# DON'T ADD THE SOURCES BY HAND, they are already added with this macro
 file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 
