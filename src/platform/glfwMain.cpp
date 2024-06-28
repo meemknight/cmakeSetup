@@ -117,11 +117,20 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 		if (key == GLFW_KEY_LEFT_CONTROL)
 		{
 			platform::internal::setButtonState(platform::Button::LeftCtrl, state);
-		}
+		}else
 		if (key == GLFW_KEY_TAB)
 		{
 			platform::internal::setButtonState(platform::Button::Tab, state);
+		}else
+		if (key == GLFW_KEY_LEFT_SHIFT)
+		{
+			platform::internal::setButtonState(platform::Button::LeftShift, state);
+		}else
+		if (key == GLFW_KEY_LEFT_ALT)
+		{
+			platform::internal::setButtonState(platform::Button::LeftAlt, state);
 		}
+
 	}
 	
 };
