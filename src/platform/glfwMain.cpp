@@ -361,7 +361,11 @@ int main()
 #pragma region imgui
 	#if REMOVE_IMGUI == 0
 		ImGui::CreateContext();
-		//ImGui::StyleColorsDark();
+		//ImGui::StyleColorsDark();				//you can use whatever imgui theme you like!
+		//imguiThemes::yellow();
+		//imguiThemes::gray();
+		//imguiThemes::green();
+		//imguiThemes::red();
 		imguiThemes::embraceTheDarkness();
 
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
