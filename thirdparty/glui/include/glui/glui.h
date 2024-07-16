@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////
-//gl2d.h				1.0.1
+//gl2d.h				1.0.2
 //Copyright(c) 2023 Luta Vlad
 //https://github.com/meemknight/glui
 //
@@ -8,6 +8,8 @@
 //
 // 1.0.1 added Frames and boxes
 //
+// 1.0.2 various stiling improvements and text
+// input improvements, and toggle button
 // 
 // 
 //////////////////////////////////////////////////
@@ -47,7 +49,13 @@ namespace glui
 		bool ButtonWithTexture(int id, gl2d::Texture t, gl2d::Color4f colors = {1,1,1,1}, glm::vec4 textureCoords = {0,1,1,0});
 
 		bool Toggle(std::string name,
-			const gl2d::Color4f colors, bool *toggle, const gl2d::Texture texture = {}, const gl2d::Texture overTexture = {});
+			const gl2d::Color4f colors, bool *toggle, 
+			const gl2d::Texture texture = {}, const gl2d::Texture overTexture = {});
+
+		bool ToggleButton(std::string name,
+			const gl2d::Color4f textColors, bool *toggle,
+			const gl2d::Texture texture = {}, const gl2d::Color4f buttonColors = {1,1,1,1});
+
 
 		//returns true if you should render it, clicked is optional
 		bool CustomWidget(int id, glm::vec4 *transform, bool *hovered = 0, bool *clicked = 0);
@@ -56,18 +64,36 @@ namespace glui
 			const gl2d::Color4f colors);
 
 		void InputText(std::string name,
-			char *text, size_t textSizeWithNullChar, gl2d::Color4f color = {0,0,0,0}, const gl2d::Texture texture = {});
+			char *text, size_t textSizeWithNullChar, 
+			gl2d::Color4f color = {0,0,0,0}, const gl2d::Texture texture = {}, 
+			bool onlyOneEnabeled= 1, bool displayText = 1, bool enabeled = 1);
 
 		void sliderFloat(std::string name, float *value, float min, float max,
+			gl2d::Color4f textColor = {1,1,1,1},
 			gl2d::Texture sliderTexture = {}, gl2d::Color4f sliderColor = {1,1,1,1},
 			gl2d::Texture ballTexture = {}, gl2d::Color4f ballColor = {1,1,1,1});
 
+
 		void sliderInt(std::string name, int *value, int min, int max,
+			gl2d::Color4f textColor = {1,1,1,1},
 			gl2d::Texture sliderTexture = {}, gl2d::Color4f sliderColor = {1,1,1,1},
 			gl2d::Texture ballTexture = {}, gl2d::Color4f ballColor = {1,1,1,1});
 
 		void colorPicker(std::string name, float *color3Component, gl2d::Texture sliderTexture = {},
-			gl2d::Texture ballTexture = {});
+			gl2d::Texture ballTexture = {}, gl2d::Color4f color = {0,0,0,0}
+			,gl2d::Color4f color2 = {0,0,0,0});
+
+		//sepparate options by |
+		void toggleOptions(std::string name,
+			std::string optionsSeparatedByBars,
+			std::size_t *currentIndex,
+			bool showText = true,
+			gl2d::Color4f textColor = {1,1,1,1},
+			gl2d::Color4f *optionsColors = nullptr,
+			gl2d::Texture texture = {},
+			gl2d::Color4f textureColor = {1,1,1,1},
+			std::string toolTip = ""
+		);
 
 		void newColum(int id);
 
@@ -80,6 +106,8 @@ namespace glui
 
 		void Begin(int id);
 		void End();
+
+		void SetAlignModeFixedSizeWidgets(glm::ivec2 size);
 
 		struct Internal
 		{
@@ -94,18 +122,26 @@ namespace glui
 
 			struct Widget
 			{
+				std::string text2;
+				std::string text3;
+
 				int type = 0;
 				bool justCreated = true;
+				bool enabeled = true;
+				bool displayText = true;
+				bool onlyOneEnabeled = true;
 				bool usedThisFrame = 0;
 				InputData lastFrameData = {};
 				gl2d::Color4f colors = Colors_White;
 				gl2d::Color4f colors2 = Colors_White;
+				gl2d::Color4f colors3 = Colors_White;
 				gl2d::Texture texture = {};
 				gl2d::Texture textureOver = {};
 				glm::vec4 textureCoords = {};
 				bool returnFromUpdate = 0;
 				bool customWidgetUsed = 0;
 				void *pointer = 0;
+				void *pointer2 = 0;
 				bool clicked = 0; //todo for all?
 				bool hovered = 0;
 				float min = 0;
@@ -125,6 +161,11 @@ namespace glui
 			};
 			
 
+			struct AlignSettings
+			{
+				glm::vec2 widgetSize = {};
+			}alignSettings;
+
 			std::vector<std::pair<std::string, Widget>> widgetsVector;
 
 			std::unordered_map<std::string, Widget> widgets;
@@ -132,6 +173,10 @@ namespace glui
 			std::unordered_map<int, std::vector<std::string>> allMenuStacks;
 
 			std::string idStr;
+
+
+			std::string currentTextBox = {};
+
 		}internal;
 
 	};
