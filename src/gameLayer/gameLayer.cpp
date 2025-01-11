@@ -72,9 +72,6 @@ bool gameLogic(float deltaTime)
 	gameData.rectPos = glm::clamp(gameData.rectPos, glm::vec2{0,0}, glm::vec2{w - 100,h - 100});
 	renderer.renderRectangle({gameData.rectPos, 100, 100}, Colors_Blue);
 
-	int *a = 0;
-	*a = 69;
-
 	renderer.flush();
 
 
