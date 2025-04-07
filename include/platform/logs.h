@@ -13,7 +13,7 @@ struct LogManager
 
 	LogManager() {};
 
-	static constexpr const char *DefaultLogFile = RESOURCES_PATH "logs.txt";
+	static constexpr const char *DefaultLogFile = RESOURCES_PATH "../logs.txt";
 
 	//a null name will just log to a internal structure
 	void init(std::string name);

@@ -5,3 +5,5 @@ build/
 .idea/
 CMakeSettings.json
 Makefile
+
+logs.txt

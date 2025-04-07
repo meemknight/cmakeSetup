@@ -16,13 +16,13 @@ void LogManager::init(std::string name)
 void LogManager::log(const char *l, int type)
 {
 
-#ifdef DEVELOPLEMT_BUILD
+#if DEVELOPLEMT_BUILD == 1
 	logInternally(l, type);
 	logToFile(l, type);
 	logToConsole(l, type);
 #endif
 
-#ifdef PRODUCTION_BUILD
+#if PRODUCTION_BUILD == 1
 	logToFile(l, type);
 	logInternally(l, type);
 #endif
