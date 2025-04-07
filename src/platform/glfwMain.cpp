@@ -284,6 +284,22 @@ namespace platform
 		return 1;
 	}
 
+	bool appendToFile(const char *name, void *buffer, size_t s)
+	{
+		std::ofstream f(name, std::ios::binary | std::ios::app);
+
+		if (f.is_open())
+		{
+			f.write((char *)buffer, s);
+			f.close();
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
 
 	bool readEntireFile(const char *name, void *buffer, size_t size)
 	{

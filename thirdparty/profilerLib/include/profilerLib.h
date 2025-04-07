@@ -1,15 +1,12 @@
 #pragma once
-#include <intrin.h>
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include <chrono>
 
 ///////////////////////////////////////////
 //https://github.com/meemknight/profilerLib
 //do not remove this notice
 //(c) Luta Vlad
 // 
-// 1.0.0
+// 1.0.1
 // 
 ///////////////////////////////////////////
 
@@ -23,57 +20,66 @@
 #define PROFILER_LIB_AVERAGE_PROFILER_MAX_TESTS 200
 
 
-namespace PL 
+namespace PL
 {
 
-	//todo port to linux
 
 	struct ProfileRezults
 	{
-		float timeSeconds=0;
-		unsigned int cpuClocks=0;
+		float timeSeconds = 0;
+		//unsigned int cpuClocks=0;
 	};
 
 #if !PROFILER_LIB_REMOVE_IMPLEMENTATION
 
-	struct PerfFreqvency
-	{
-		PerfFreqvency()
-		{
-			QueryPerformanceFrequency(&perfFreq);
-		}
-
-		LARGE_INTEGER perfFreq;
-	};
-	const static PerfFreqvency freq;
 
 
 	struct Profiler
 	{
+		ProfileRezults rezult;
+		bool started = 0;
 
-		LARGE_INTEGER startTime = {};
-		__int64 cycleCount = {};
+		std::chrono::time_point<std::chrono::high_resolution_clock>
+			startTime = std::chrono::high_resolution_clock::now();
+		//__int64 cycleCount = {};
 
 		void start()
 		{
-			QueryPerformanceCounter(&startTime);
-			cycleCount = __rdtsc();
+			started = true;
+			rezult = {};
+			startTime = std::chrono::high_resolution_clock::now();
+			//cycleCount = __rdtsc();
 		}
 
 		ProfileRezults end()
 		{
-			__int64 endCycleCount = __rdtsc();
-			LARGE_INTEGER endTime;
-			QueryPerformanceCounter(&endTime);
+			if (!started)
+			{
+				return rezult;
+			}
+			else
+			{
+				started = false;
+			}
 
-			cycleCount = endCycleCount - cycleCount;
-			startTime.QuadPart = endTime.QuadPart - startTime.QuadPart;
+			//__int64 endCycleCount = __rdtsc();
+
+			auto endTime = std::chrono::high_resolution_clock::now();
+
+			//cycleCount = endCycleCount - cycleCount;
+
+
+			auto duration =
+				std::chrono::duration_cast<std::chrono::duration<float>>
+				(endTime - startTime);
 
 
 			ProfileRezults r = {};
 
-			r.timeSeconds = (float)startTime.QuadPart / (float)freq.perfFreq.QuadPart;
-			r.cpuClocks = cycleCount;
+			r.timeSeconds = duration.count();
+			//r.cpuClocks = cycleCount;
+
+			rezult = r;
 
 			return r;
 		}
@@ -96,8 +102,8 @@ namespace PL
 		ProfileRezults end()
 		{
 			auto r = profiler.end();
-			
-			if(index < PROFILER_LIB_AVERAGE_PROFILER_MAX_TESTS)
+
+			if (index < PROFILER_LIB_AVERAGE_PROFILER_MAX_TESTS)
 			{
 				rezults[index] = r;
 				index++;
@@ -110,22 +116,23 @@ namespace PL
 		{
 			if (index == 0)
 			{
-				return { 0,0 };
+				//return { 0,0 };
+				return {0};
 			}
 
 			long double time = 0;
 			unsigned long cpuTime = 0;
 
-			for(int i=0;i<index;i++)
+			for (int i = 0; i < index; i++)
 			{
 				time += rezults[i].timeSeconds;
-				cpuTime += rezults[i].cpuClocks;
+				//cpuTime += rezults[i].cpuClocks;
 			}
 
-
-			return { (float)(time / index), cpuTime /index };
+			//return { (float)(time / index), cpuTime /index };
+			return {(float)(time / index)};
 		}
-		
+
 		void resetData()
 		{
 			index = 0;
@@ -145,46 +152,46 @@ namespace PL
 
 	struct Profiler
 	{
-		
+
 		void start()
 		{
-			
+
 		}
-	
+
 		ProfileRezults end()
-		{	
+		{
 			return {};
 		}
-	
+
 	};
-	
-	
+
+
 	struct AverageProfiler
 	{
-		
+
 		void start()
 		{
 		}
-	
+
 		ProfileRezults end()
 		{
 			return {};
 		}
-	
+
 		ProfileRezults getAverageNoResetData()
 		{
 			return {};
 		}
-	
+
 		void resetData()
 		{
 		}
-	
+
 		ProfileRezults getAverageAndResetData()
 		{
 			return {};
 		}
-	
+
 	};
 
 

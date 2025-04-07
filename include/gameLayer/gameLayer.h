@@ -43,6 +43,7 @@ namespace platform
 	bool readEntireFile(const char *name, std::vector<unsigned char> &buffer);
 	bool readEntireFile(const char *name, std::vector<unsigned char> &buffer);
 	std::string readEntireFile(const char *name, bool *succeeded = nullptr);
+	bool appendToFile(const char *name, void *buffer, size_t s);
 	size_t getFileSize(const char *name);
 
 };
