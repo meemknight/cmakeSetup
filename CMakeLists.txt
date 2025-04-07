@@ -99,7 +99,7 @@ endif()
 
 #force remove unicode
 if (WIN32)
-    target_compile_options("${CMAKE_PROJECT_NAME}" PRIVATE /UUNICODE /U_UNICODE)
+	target_compile_options("${CMAKE_PROJECT_NAME}" PRIVATE /UUNICODE /U_UNICODE)
 endif()
 
 

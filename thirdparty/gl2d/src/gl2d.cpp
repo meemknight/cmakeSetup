@@ -2630,6 +2630,8 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		texture.cleanup();
 		depthTexture.cleanup();
+
+		*this = {};
 	}
 
 	void FrameBuffer::clear()

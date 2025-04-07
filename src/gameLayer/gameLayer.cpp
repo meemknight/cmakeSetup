@@ -12,6 +12,7 @@
 #include <platformTools.h>
 #include <IconsForkAwesome.h>
 #include <imguiTools.h>
+#include <logs.h>
 
 struct GameData
 {
@@ -29,6 +30,8 @@ bool initGame()
 
 	//loading the saved data. Loading an entire structure like this makes savind game data very easy.
 	platform::readEntireFile(RESOURCES_PATH "gameData.data", &gameData, sizeof(GameData));
+
+	platform::log("Init");
 
 	return true;
 }
