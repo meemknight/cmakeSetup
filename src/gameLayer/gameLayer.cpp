@@ -10,6 +10,8 @@
 #include "imfilebrowser.h"
 #include <gl2d/gl2d.h>
 #include <platformTools.h>
+#include <IconsForkAwesome.h>
+#include <imguiTools.h>
 
 struct GameData
 {
@@ -76,10 +78,26 @@ bool gameLogic(float deltaTime)
 
 
 	//ImGui::ShowDemoWindow();
+	ImGui::PushMakeWindowNotTransparent();
 	ImGui::Begin("Test Imgui");
 
 	ImGui::DragFloat2("Positions", &gameData.rectPos[0]);
 
+	ImGui::Text("Emoji moment: " ICON_FK_AMBULANCE);
+
+	ImGui::helpMarker("test");
+
+	ImGui::addErrorSymbol();
+	ImGui::addWarningSymbol();
+
+	ImGui::BeginChildFrameColoured(1, Colors_Gray, {100,100}, 0);
+
+	ImGui::Text("Test");
+
+	ImGui::EndChildFrame();
+
+
+	ImGui::PopMakeWindowNotTransparent();
 	ImGui::End();
 
 	return true;

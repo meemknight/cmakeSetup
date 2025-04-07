@@ -5,6 +5,7 @@
 #include <string.h>
 #include <cstring>
 
+//to bytes
 inline size_t constexpr KB(size_t x) { return x * 1024ull; }
 inline size_t constexpr MB(size_t x) { return KB(x) * 1024ull; }
 inline size_t constexpr GB(size_t x) { return MB(x) * 1024ull; }
@@ -16,8 +17,6 @@ inline float constexpr BYTES_TO_GB(size_t x) { return BYTES_TO_MB(x) / 1024.f; }
 
 
 #define REMOVE_IMGUI 0
-
-
 
 
 void assertFuncProduction(

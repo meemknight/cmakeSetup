@@ -28,6 +28,7 @@
 	#include "backends/imgui_impl_glfw.h"
 	#include "backends/imgui_impl_opengl3.h"
 	#include "imguiThemes.h"
+	#include "IconsForkAwesome.h"
 #endif
 
 #ifdef _WIN32
@@ -375,7 +376,8 @@ int main()
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 		//io.ConfigViewportsNoAutoMerge = true;
 		//io.ConfigViewportsNoTaskBarIcon = true;
-	
+		io.FontGlobalScale = 2; //adjust scale
+
 		ImGuiStyle& style = ImGui::GetStyle();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
@@ -386,6 +388,56 @@ int main()
 	
 		ImGui_ImplGlfw_InitForOpenGL(wind, true);
 		ImGui_ImplOpenGL3_Init("#version 330");
+
+
+		if(1) //load font awesome
+		{
+			//https://pixtur.github.io/mkdocs-for-imgui/site/FONTS/
+			//https://github.com/juliettef/IconFontCppHeaders
+			//https://fontawesome.com/v4/icons/
+
+			
+			if (1)
+			{
+				// use the default font
+				io.Fonts->AddFontDefault();
+			}
+			else
+			{
+				//load custom font
+				io.Fonts->AddFontFromFileTTF(RESOURCES_PATH "arial.ttf", 16);
+			}
+			
+		
+			
+			// Merge FontAwesome into the default font
+			ImFontConfig config;
+			config.MergeMode = true;
+			config.PixelSnapH = true;
+			config.GlyphMinAdvanceX = 16.0f; // adjust as needed
+			
+			static const ImWchar icon_ranges[] = {ICON_MIN_FK, ICON_MAX_FK, 0};
+			io.Fonts->AddFontFromFileTTF(RESOURCES_PATH "fontawesome-webfont.ttf", 16.0f, &config, icon_ranges);
+			
+			// Build fonts after all additions
+			io.Fonts->Build();
+		
+
+			//make one icon larger
+			//{
+			//	ImVector<ImWchar> ranges;
+			//	ImFontGlyphRangesBuilder builder;
+			//	builder.AddChar(0xf016);//ICON_FK_FILE_O
+			//	builder.AddChar(0xf114);//ICON_FK_FOLDER_O
+			//	builder.BuildRanges(&ranges);
+			//
+			//	io.Fonts->AddFontFromFileTTF(RESOURCES_PATH "fontawesome-webfont.ttf",
+			//		150.f / io.FontGlobalScale, 0, ranges.Data);
+			//}
+
+		}
+
+
 	#endif
 #pragma endregion
 
