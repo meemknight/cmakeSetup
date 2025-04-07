@@ -1,6 +1,5 @@
 #pragma once
 #include <GLFW/glfw3.h>
-#include "gameLayer.h"
 #include <string>
 
 namespace platform
@@ -13,7 +12,6 @@ namespace platform
 		char newState = -1; // this can be -1, used for internal logic
 		char typed = 0;
 		float typedTime = 0;
-
 
 		enum
 		{
@@ -63,7 +61,7 @@ namespace platform
 		}
 	}
 
-	struct ControllerButtons
+	struct Controller
 	{
 		enum Buttons
 		{
@@ -96,14 +94,54 @@ namespace platform
 
 		void setAllToZero()
 		{
-			*this = ControllerButtons();
+			*this = Controller();
 		}
 	};
 
+	struct Input
+	{
+		//typed input doesn't work with mouse buttons
+		Button lMouse = {};
+		Button rMouse = {};
+
+		//mouse position relative to window
+		int mouseX = 0;
+		int mouseY = 0;
+
+		Button buttons[Button::BUTTONS_COUNT] = {};
+
+		char typedInput[20] = {};
+
+		float deltaTime = 0;
+
+		bool hasFocus = 0;
+
+		Controller controller = {};
+
+		int isButtonHeld(int key) { return buttons[key].held; };
+		int isButtonPressed(int key) { return buttons[key].pressed; };
+		int isButtonReleased(int key) { return buttons[key].released; };
+		int isButtonTyped(int key) { return buttons[key].typed; };
+
+		int isLMousePressed() { return lMouse.pressed; };
+		int isRMousePressed() { return rMouse.pressed; };
+
+		int isLMouseReleased() { return lMouse.released; };
+		int isRMouseReleased() { return rMouse.released; };
+
+		int isLMouseHeld() { return lMouse.held; };
+		int isRMouseHeld() { return rMouse.held; };
+	};
+
 	
-	//Button::key
+	platform::Button *getAllButtons();
+
+	platform::Button &getLMouseButton();
+	platform::Button &getRMouseButton();
+
+
 	int isButtonHeld(int key);
-	int isButtonPressedOn(int key);
+	int isButtonPressed(int key);
 	int isButtonReleased(int key);
 	int isButtonTyped(int key);
 
@@ -116,7 +154,7 @@ namespace platform
 	int isLMouseHeld();
 	int isRMouseHeld();
 
-	ControllerButtons getControllerButtons();
+	Controller getControllerButtons();
 	std::string getTypedInput();
 
 	namespace internal

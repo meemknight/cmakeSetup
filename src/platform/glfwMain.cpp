@@ -20,6 +20,7 @@
 #include <fstream>
 #include <chrono>
 #include "errorReporting.h"
+#include <stringManipulation.h>
 
 #define REMOVE_IMGUI 0
 
@@ -257,9 +258,8 @@ namespace platform
 		}
 	}
 
-	bool isFocused()
+	bool hasFocused()
 	{
-		
 		return windowFocus;
 	}
 
@@ -300,6 +300,90 @@ namespace platform
 
 		return 1;
 	}
+
+	bool readEntireFile(const char *name, std::vector<unsigned char> &buffer)
+	{
+		std::ifstream f(name, std::ios::binary | std::ios::ate);
+		if (!f.is_open())
+			{ return false; }
+
+		std::streamsize fileSize = f.tellg();
+		f.seekg(0, std::ios::beg);
+
+		buffer.resize(static_cast<size_t>(fileSize));
+
+		if (!f.read((char*)(buffer.data()), fileSize))
+		{
+			f.close();
+			return false;
+		}
+
+		f.close();
+		return true;
+	}
+
+	bool readEntireFile(const char *name, std::vector<char> &buffer)
+	{
+		std::ifstream f(name, std::ios::binary | std::ios::ate);
+		if (!f.is_open())
+		{
+			return false;
+		}
+
+		std::streamsize fileSize = f.tellg();
+		f.seekg(0, std::ios::beg);
+
+		buffer.resize(static_cast<size_t>(fileSize));
+
+		if (!f.read((char *)(buffer.data()), fileSize))
+		{
+			f.close();
+			return false;
+		}
+
+		f.close();
+		return true;
+	}
+
+	std::string readEntireFile(const char *name, bool *succeeded)
+	{
+		if (succeeded) { *succeeded = false; }
+
+		std::ifstream f(name, std::ios::binary | std::ios::ate);
+		if (!f.is_open())
+		{
+			return "";
+		}
+
+		std::streamsize fileSize = f.tellg();
+		f.seekg(0, std::ios::beg);
+
+		std::string buffer;
+
+		buffer.resize(static_cast<size_t>(fileSize));
+
+		if (!f.read((char *)(buffer.data()), fileSize))
+		{
+			f.close();
+			return "";
+		}
+
+		f.close();
+		if (succeeded) { *succeeded = true; }
+		return buffer;
+	}
+
+	size_t getFileSize(const char *name)
+	{
+		std::ifstream f(name, std::ios::binary | std::ios::ate);
+		if (!f.is_open())
+			{ return 0; }
+
+		std::streamsize fileSize = f.tellg();
+		f.close();
+		return fileSize;
+	}
+
 
 };
 #pragma endregion
@@ -495,7 +579,19 @@ int main()
 
 	#pragma region game logic
 
-		if (!gameLogic(augmentedDeltaTime))
+		platform::Input input = {};
+
+		input.deltaTime = deltaTime;
+		input.hasFocus = platform::hasFocused();
+		memcpy(input.buttons, platform::getAllButtons(), sizeof(input.buttons));
+		input.controller = platform::getControllerButtons();
+		input.mouseX = platform::getRelMousePosition().x;
+		input.mouseY = platform::getRelMousePosition().y;
+		input.lMouse = platform::getLMouseButton();
+		input.rMouse = platform::getRMouseButton();
+		strlcpy(input.typedInput, platform::getTypedInput(), sizeof(input.typedInput));
+
+		if (!gameLogic(augmentedDeltaTime, input))
 		{
 			closeGame();
 			return 0;
@@ -506,7 +602,7 @@ int main()
 
 	#pragma region fullscreen 
 
-		if (platform::isFocused() && currentFullScreen != fullScreen)
+		if (platform::hasFocused() && currentFullScreen != fullScreen)
 		{
 			static int lastW = w;
 			static int lastH = w;

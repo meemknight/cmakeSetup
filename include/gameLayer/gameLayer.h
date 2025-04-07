@@ -1,8 +1,11 @@
 #pragma once
 #include <glm/vec2.hpp>
+#include <platform/platformInput.h>
+#include <vector>
+#include <string>
 
 bool initGame();
-bool gameLogic(float deltaTime);
+bool gameLogic(float deltaTime, platform::Input &input);
 void closeGame();
 
 namespace platform
@@ -32,12 +35,15 @@ namespace platform
 	glm::ivec2 getRelMousePosition();
 
 	void showMouse(bool show);
-	bool isFocused();
+	bool hasFocused();
 	bool mouseMoved();
 
 	bool writeEntireFile(const char *name, void *buffer, size_t size);
 	bool readEntireFile(const char *name, void *buffer, size_t size);
-
+	bool readEntireFile(const char *name, std::vector<unsigned char> &buffer);
+	bool readEntireFile(const char *name, std::vector<unsigned char> &buffer);
+	std::string readEntireFile(const char *name, bool *succeeded = nullptr);
+	size_t getFileSize(const char *name);
 
 };
 

@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////
-//gl2d.cpp				1.6.1
-//Copyright(c) 2020 - 2024 Luta Vlad
+//gl2d.cpp				1.6.3
+//Copyright(c) 2020 - 2025 Luta Vlad
 //https://github.com/meemknight/gl2d
 // 
 //notes: 
@@ -65,6 +65,12 @@
 // 
 // 1.6.1
 // trying to fix some text stuff
+//
+// 1.6.2
+// finally fixed font rendering problems
+// 
+// 1.6.3
+// added depth option to the framebuffer
 // 
 ////////////////////////////////////////////////////////////////////////
 
@@ -108,7 +114,7 @@ namespace gl2d
 	static Camera defaultCamera{};
 	static Texture white1pxSquareTexture = {};
 
-	static const char* defaultVertexShader =
+	static const char *defaultVertexShader =
 		GL2D_OPNEGL_SHADER_VERSION "\n"
 		GL2D_OPNEGL_SHADER_PRECISION "\n"
 		"in vec2 quad_positions;\n"
@@ -125,7 +131,7 @@ namespace gl2d
 		"	v_positions = gl_Position.xy;\n"
 		"}\n";
 
-	static const char* defaultFragmentShader =
+	static const char *defaultFragmentShader =
 		GL2D_OPNEGL_SHADER_VERSION "\n"
 		GL2D_OPNEGL_SHADER_PRECISION "\n"
 		"out vec4 color;\n"
@@ -154,9 +160,9 @@ namespace gl2d
 
 #pragma endregion
 
-	static errorFuncType* errorFunc = defaultErrorFunc;
+	static errorFuncType *errorFunc = defaultErrorFunc;
 
-	void defaultErrorFunc(const char* msg, void *userDefinedData)
+	void defaultErrorFunc(const char *msg, void *userDefinedData)
 	{
 		std::cerr << "gl2d error: " << msg << "\n";
 	}
@@ -167,7 +173,7 @@ namespace gl2d
 		userDefinedData = data;
 	}
 
-	errorFuncType* setErrorFuncCallback(errorFuncType* newFunc)
+	errorFuncType *setErrorFuncCallback(errorFuncType *newFunc)
 	{
 		auto a = errorFunc;
 		errorFunc = newFunc;
@@ -210,7 +216,7 @@ namespace gl2d
 			return glm::vec4{quad.s0, quad.t0, quad.s1, quad.t1};
 		}
 
-		GLuint loadShader(const char* source, GLenum shaderType)
+		GLuint loadShader(const char *source, GLenum shaderType)
 		{
 			GLuint id = glCreateShader(shaderType);
 
@@ -222,7 +228,7 @@ namespace gl2d
 
 			if (!result)
 			{
-				char* message = 0;
+				char *message = 0;
 				int   l = 0;
 
 				glGetShaderiv(id, GL_INFO_LOG_LENGTH, &l);
@@ -241,11 +247,11 @@ namespace gl2d
 
 			return id;
 		}
-		
+
 	}
 
 #ifdef _WIN32
-	typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC) (int interval);
+	typedef BOOL(WINAPI *PFNWGLSWAPINTERVALEXTPROC) (int interval);
 #else
 	typedef bool(*PFNWGLSWAPINTERVALEXTPROC) (int interval);
 #endif
@@ -283,7 +289,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 	#ifdef _WIN32
 		//add linux suport
-		
+
 		//if you are not using visual studio make shure you link to "Opengl32.lib"
 		extensions.wglSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)wglGetProcAddress("wglSwapIntervalEXT");
 	#endif
@@ -440,7 +446,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		fileFont.seekg(0, std::ios::end);
 		fileSize = (int)fileFont.tellg();
 		fileFont.seekg(0, std::ios::beg);
-		char *fileData = new char[fileSize+1]; //null terminated
+		char *fileData = new char[fileSize + 1]; //null terminated
 		fileFont.read((char *)fileData, fileSize);
 		fileFont.close();
 		fileData[fileSize] = 0; //null terminated
@@ -462,7 +468,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 	///////////////////// Texture /////////////////////
 #pragma region Texture
 
-	void convertFromRetardedCoordonates(int tSizeX, int tSizeY, int x, int y, int sizeX, int sizeY, int s1, int s2, int s3, int s4, Texture_Coords* outer, Texture_Coords* inner)
+	void convertFromRetardedCoordonates(int tSizeX, int tSizeY, int x, int y, int sizeX, int sizeY, int s1, int s2, int s3, int s4, Texture_Coords *outer, Texture_Coords *inner)
 	{
 		float newX = (float)tSizeX / (float)x;
 		float newY = (float)tSizeY / (float)y;
@@ -494,14 +500,29 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 	///////////////////// Font /////////////////////
 #pragma	region Font
 
-	void Font::createFromTTF(const unsigned char *ttf_data, const size_t ttf_data_size)
+	void Font::createFromTTF(const unsigned char *ttf_data, const size_t ttf_data_size,
+		bool monospaced)
 	{
-		size.x = 2000,
-		size.y = 2000,
-		max_height = 0,
+		this->monospaced = monospaced;
+
+		size.x = 2000;
+		size.y = 2000;
+		max_height = 0;
 		packedCharsBufferSize = ('~' - ' ');
 
-		//STB TrueType will give us a one channel buffer of the font that we then convert to RGBA for OpenGL
+		// Initialize stbtt_fontinfo to get font metrics
+		stbtt_fontinfo fontInfo;
+		stbtt_InitFont(&fontInfo, ttf_data, stbtt_GetFontOffsetForIndex(ttf_data, 0));
+
+		int ascent, descent, lineGap;
+		stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
+
+		float scale = stbtt_ScaleForPixelHeight(&fontInfo, 64); // Match font size used in PackFontRange
+		max_height = (ascent - descent + lineGap) * scale;
+
+
+
+		// STB TrueType will give us a one channel buffer of the font that we then convert to RGBA for OpenGL
 		const size_t fontMonochromeBufferSize = size.x * size.y;
 		const size_t fontRgbaBufferSize = size.x * size.y * 4;
 
@@ -513,55 +534,54 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		stbtt_pack_context stbtt_context;
 		stbtt_PackBegin(&stbtt_context, fontMonochromeBuffer, size.x, size.y, 0, 2, NULL);
 		stbtt_PackSetOversampling(&stbtt_context, 2, 2);
-		stbtt_PackFontRange(&stbtt_context, ttf_data, 0, 65, ' ', '~' - ' ', packedCharsBuffer);
+		stbtt_PackFontRange(&stbtt_context, ttf_data, 0, 64, ' ', '~' - ' ', packedCharsBuffer);
 		stbtt_PackEnd(&stbtt_context);
 
+		// Convert monochrome buffer to RGBA
 		for (int i = 0; i < fontMonochromeBufferSize; i++)
 		{
-
 			fontRgbaBuffer[(i * 4)] = fontMonochromeBuffer[i];
 			fontRgbaBuffer[(i * 4) + 1] = fontMonochromeBuffer[i];
 			fontRgbaBuffer[(i * 4) + 2] = fontMonochromeBuffer[i];
-
-			if (fontMonochromeBuffer[i] > 1)
-			{
-				fontRgbaBuffer[(i * 4) + 3] = 255;
-			}
-			else
-			{
-				fontRgbaBuffer[(i * 4) + 3] = 0;
-			}
+			fontRgbaBuffer[(i * 4) + 3] = fontMonochromeBuffer[i] > 1 ? 255 : 0;
 		}
 
-		//Init texture
+		// Init texture
+		glGenTextures(1, &texture.id);
+		glBindTexture(GL_TEXTURE_2D, texture.id);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, fontRgbaBuffer);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+
+		//if (monospaced)
+		//{
+		//	for (char c = ' '; c <= '~'; c++)
+		//	{
+		//		stbtt_packedchar &glyph = packedCharsBuffer[c - ' '];
+		//		float charWidth = glyph.x1 - glyph.x0;
+		//		if (charWidth > max_height)
+		//			max_height = charWidth;
+		//	}
+		//}
+
+		if (monospaced)
 		{
-			glGenTextures(1, &texture.id);
-			glBindTexture(GL_TEXTURE_2D, texture.id);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, fontRgbaBuffer);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			spaceSize = max_height;
 		}
+		else
+		{
+			spaceSize = packedCharsBuffer[' ' - ' '].xadvance;
+		}
+
 
 		delete[] fontMonochromeBuffer;
 		delete[] fontRgbaBuffer;
-
-		for (char c = ' '; c <= '~'; c++)
-		{
-			const stbtt_aligned_quad  q = internal::fontGetGlyphQuad(*this, c);
-			const float               m = q.y1 - q.y0;
-
-			if (m > max_height && m < 1.e+8f)
-			{
-				max_height = m;
-			}
-		}
-
 	}
 
-	void Font::createFromFile(const char *file)
+	void Font::createFromFile(const char *file, bool monospaced)
 	{
 		std::ifstream fileFont(file, std::ios::binary);
 
@@ -582,7 +602,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		fileFont.read((char *)fileData, fileSize);
 		fileFont.close();
 
-		createFromTTF(fileData, fileSize);
+		createFromTTF(fileData, fileSize, monospaced);
 
 		delete[] fileData;
 	}
@@ -645,7 +665,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			return;
 		}
 
-		if(renderer.spriteTextures.empty())
+		if (renderer.spriteTextures.empty())
 		{
 			return;
 		}
@@ -694,7 +714,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			glBindVertexArray(0);
 		}
 
-		if (clearDrawData) 
+		if (clearDrawData)
 		{
 			renderer.clearDrawData();
 		}
@@ -708,7 +728,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 	void Renderer2D::flushFBO(FrameBuffer frameBuffer, bool clearDrawData)
 	{
-		if (frameBuffer.fbo == 0) 
+		if (frameBuffer.fbo == 0)
 		{
 			errorFunc("Framebuffer not initialized", userDefinedData);
 			return;
@@ -796,7 +816,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		glm::ivec2 size = {windowW, windowH};
 
-		if (screen.fbo) 
+		if (screen.fbo)
 		{
 			size = screen.texture.GetSize();
 		}
@@ -830,38 +850,42 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			}
 		}
 
-		if (!postProcessFbo1.fbo) { postProcessFbo1.create(0,0); }
+		if (!postProcessFbo1.fbo) { postProcessFbo1.create(0, 0); }
 
 		postProcessFbo1.resize(windowW, windowH);
 		postProcessFbo1.clear();
 
 		flushFBO(postProcessFbo1, clearDrawData);
-		
+
 		internalPostProcessFlip = 1;
 		postProcessOverATexture(postProcesses, postProcessFbo1.texture, frameBuffer);
 
 	}
 
-	void Renderer2D::postProcessOverATexture(const std::vector<ShaderProgram> &postProcesses, 
+	void Renderer2D::postProcessOverATexture(const std::vector<ShaderProgram> &postProcesses,
 		gl2d::Texture in,
 		FrameBuffer frameBuffer)
 	{
 		if (postProcesses.empty())
-			{return;}
+		{
+			return;
+		}
 
 
 		if (!postProcessFbo1.fbo) { postProcessFbo1.create(0, 0); }
 		if (!postProcessFbo2.fbo && postProcesses.size() > 1)
-			{ postProcessFbo2.create(0, 0); }
-		
-		if (internalPostProcessFlip == 0) 
+		{
+			postProcessFbo2.create(0, 0);
+		}
+
+		if (internalPostProcessFlip == 0)
 		{
 			postProcessFbo1.resize(windowW, windowH);
 			postProcessFbo1.clear();
 			postProcessFbo2.resize(windowW, windowH);
 			postProcessFbo2.clear();
 		}
-		else if(postProcessFbo2.fbo)
+		else if (postProcessFbo2.fbo)
 		{
 			//postProcessFbo1 has already been resized
 			postProcessFbo2.resize(windowW, windowH);
@@ -894,7 +918,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 				output = frameBuffer;
 			}
 			output.clear();
-			
+
 			renderPostProcess(postProcesses[i], input, output);
 			internalPostProcessFlip = !internalPostProcessFlip;
 		}
@@ -921,7 +945,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		renderRectangleAbsRotation(transforms, texture, colors, newOrigin, rotation, textureCoords);
 	}
 
-	void gl2d::Renderer2D::renderRectangleAbsRotation(const Rect transforms, 
+	void gl2d::Renderer2D::renderRectangleAbsRotation(const Rect transforms,
 		const Texture texture, const Color4f colors[4], const glm::vec2 origin, const float rotation, const glm::vec4 textureCoords)
 	{
 		Texture textureCopy = texture;
@@ -935,10 +959,10 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		//We need to flip texture_transforms.y
 		const float transformsY = transforms.y * -1;
 
-		glm::vec2 v1 = { transforms.x,				  transformsY };
-		glm::vec2 v2 = { transforms.x,				  transformsY - transforms.w };
-		glm::vec2 v3 = { transforms.x + transforms.z, transformsY - transforms.w };
-		glm::vec2 v4 = { transforms.x + transforms.z, transformsY };
+		glm::vec2 v1 = {transforms.x,				  transformsY};
+		glm::vec2 v2 = {transforms.x,				  transformsY - transforms.w};
+		glm::vec2 v3 = {transforms.x + transforms.z, transformsY - transforms.w};
+		glm::vec2 v4 = {transforms.x + transforms.z, transformsY};
 
 		//Apply rotations
 		if (rotation != 0)
@@ -996,13 +1020,13 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		v3.y = internal::positionToScreenCoordsY(v3.y, (float)windowH);
 		v4.y = internal::positionToScreenCoordsY(v4.y, (float)windowH);
 
-		spritePositions.push_back(glm::vec2{ v1.x, v1.y });
-		spritePositions.push_back(glm::vec2{ v2.x, v2.y });
-		spritePositions.push_back(glm::vec2{ v4.x, v4.y });
+		spritePositions.push_back(glm::vec2{v1.x, v1.y});
+		spritePositions.push_back(glm::vec2{v2.x, v2.y});
+		spritePositions.push_back(glm::vec2{v4.x, v4.y});
 
-		spritePositions.push_back(glm::vec2{ v2.x, v2.y });
-		spritePositions.push_back(glm::vec2{ v3.x, v3.y });
-		spritePositions.push_back(glm::vec2{ v4.x, v4.y });
+		spritePositions.push_back(glm::vec2{v2.x, v2.y});
+		spritePositions.push_back(glm::vec2{v3.x, v3.y});
+		spritePositions.push_back(glm::vec2{v4.x, v4.y});
 
 		spriteColors.push_back(colors[0]);
 		spriteColors.push_back(colors[1]);
@@ -1011,12 +1035,12 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		spriteColors.push_back(colors[2]);
 		spriteColors.push_back(colors[3]);
 
-		texturePositions.push_back(glm::vec2{ textureCoords.x, textureCoords.y }); //1
-		texturePositions.push_back(glm::vec2{ textureCoords.x, textureCoords.w }); //2
-		texturePositions.push_back(glm::vec2{ textureCoords.z, textureCoords.y }); //4
-		texturePositions.push_back(glm::vec2{ textureCoords.x, textureCoords.w }); //2
-		texturePositions.push_back(glm::vec2{ textureCoords.z, textureCoords.w }); //3
-		texturePositions.push_back(glm::vec2{ textureCoords.z, textureCoords.y }); //4
+		texturePositions.push_back(glm::vec2{textureCoords.x, textureCoords.y}); //1
+		texturePositions.push_back(glm::vec2{textureCoords.x, textureCoords.w}); //2
+		texturePositions.push_back(glm::vec2{textureCoords.z, textureCoords.y}); //4
+		texturePositions.push_back(glm::vec2{textureCoords.x, textureCoords.w}); //2
+		texturePositions.push_back(glm::vec2{textureCoords.z, textureCoords.w}); //3
+		texturePositions.push_back(glm::vec2{textureCoords.z, textureCoords.y}); //4
 
 		spriteTextures.push_back(textureCopy);
 	}
@@ -1034,10 +1058,10 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 	void Renderer2D::renderLine(const glm::vec2 position, const float angleDegrees, const float length, const Color4f color, const float width)
 	{
 		renderRectangle({position - glm::vec2(0,width / 2.f), length, width},
-			color, {-length/2, 0}, angleDegrees);
+			color, {-length / 2, 0}, angleDegrees);
 	}
 
-	void Renderer2D::renderLine(const glm::vec2 start, const glm::vec2 end, const Color4f color, const float width) 
+	void Renderer2D::renderLine(const glm::vec2 start, const glm::vec2 end, const Color4f color, const float width)
 	{
 		glm::vec2 vector = end - start;
 		float length = glm::length(vector);
@@ -1048,12 +1072,12 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 	void Renderer2D::renderRectangleOutline(const glm::vec4 position, const Color4f color, const float width,
 		const glm::vec2 origin, const float rotationDegrees)
 	{
-		
+
 		glm::vec2 topLeft = position;
 		glm::vec2 topRight = glm::vec2(position) + glm::vec2(position.z, 0);
 		glm::vec2 bottomLeft = glm::vec2(position) + glm::vec2(0, position.w);
 		glm::vec2 bottomRight = glm::vec2(position) + glm::vec2(position.z, position.w);
-		
+
 		glm::vec2 p1 = topLeft + glm::vec2(-width / 2.f, 0);
 		glm::vec2 p2 = topRight + glm::vec2(+width / 2.f, 0);
 		glm::vec2 p3 = topRight + glm::vec2(0, +width / 2.f);
@@ -1063,7 +1087,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		glm::vec2 p7 = bottomLeft + glm::vec2(0, -width / 2.f);
 		glm::vec2 p8 = topLeft + glm::vec2(0, +width / 2.f);
 
-		if (rotationDegrees != 0) 
+		if (rotationDegrees != 0)
 		{
 			glm::vec2 o = origin + glm::vec2(position.x, -position.y) + glm::vec2(position.z, -position.w) / 2.f;
 
@@ -1077,7 +1101,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			p8 = rotateAroundPoint(p8, o, -rotationDegrees);
 		}
 
-		auto renderPoint = [&](glm::vec2 pos) 
+		auto renderPoint = [&](glm::vec2 pos)
 		{
 			renderRectangle({pos - glm::vec2(1,1),2,2}, Colors_Black);
 		};
@@ -1103,7 +1127,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		const float size, const Color4f color,
 		const float width, const unsigned int segments)
 	{
-	
+
 		auto calcPos = [&](int p)
 		{
 			glm::vec2 circle = {size,0};
@@ -1118,7 +1142,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			return circle + position;
 		};
 
-		
+
 		glm::vec2 lastPos = calcPos(1);
 		renderLine(calcPos(0), lastPos, color, width);
 		for (int i = 1; i < segments; i++)
@@ -1138,7 +1162,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 	void Renderer2D::render9Patch(const Rect position, const int borderSize, const Color4f color, const glm::vec2 origin, const float rotation, const Texture texture, const Texture_Coords textureCoords, const Texture_Coords inner_texture_coords)
 	{
-		glm::vec4 colorData[4] = { color, color, color, color };
+		glm::vec4 colorData[4] = {color, color, color, color};
 
 		//inner
 		Rect innerPos = position;
@@ -1146,7 +1170,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		innerPos.y += borderSize;
 		innerPos.z -= borderSize * 2;
 		innerPos.w -= borderSize * 2;
-		renderRectangle(innerPos, texture, colorData, Position2D{ 0, 0 }, 0, inner_texture_coords);
+		renderRectangle(innerPos, texture, colorData, Position2D{0, 0}, 0, inner_texture_coords);
 
 		//top
 		Rect topPos = position;
@@ -1158,7 +1182,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		upperTexPos.y = textureCoords.y;
 		upperTexPos.z = inner_texture_coords.z;
 		upperTexPos.w = inner_texture_coords.y;
-		renderRectangle(topPos, texture, colorData, Position2D{ 0, 0 }, 0, upperTexPos);
+		renderRectangle(topPos, texture, colorData, Position2D{0, 0}, 0, upperTexPos);
 
 		//bottom
 		Rect bottom = position;
@@ -1171,7 +1195,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		bottomTexPos.y = inner_texture_coords.w;
 		bottomTexPos.z = inner_texture_coords.z;
 		bottomTexPos.w = textureCoords.w;
-		renderRectangle(bottom, texture, colorData, Position2D{ 0, 0 }, 0, bottomTexPos);
+		renderRectangle(bottom, texture, colorData, Position2D{0, 0}, 0, bottomTexPos);
 
 		//left
 		Rect left = position;
@@ -1183,7 +1207,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		leftTexPos.y = inner_texture_coords.y;
 		leftTexPos.z = inner_texture_coords.x;
 		leftTexPos.w = inner_texture_coords.w;
-		renderRectangle(left, texture, colorData, Position2D{ 0, 0 }, 0, leftTexPos);
+		renderRectangle(left, texture, colorData, Position2D{0, 0}, 0, leftTexPos);
 
 		//right
 		Rect right = position;
@@ -1196,7 +1220,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		rightTexPos.y = inner_texture_coords.y;
 		rightTexPos.z = textureCoords.z;
 		rightTexPos.w = inner_texture_coords.w;
-		renderRectangle(right, texture, colorData, Position2D{ 0, 0 }, 0, rightTexPos);
+		renderRectangle(right, texture, colorData, Position2D{0, 0}, 0, rightTexPos);
 
 		//topleft
 		Rect topleft = position;
@@ -1207,7 +1231,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		topleftTexPos.y = textureCoords.y;
 		topleftTexPos.z = inner_texture_coords.x;
 		topleftTexPos.w = inner_texture_coords.y;
-		renderRectangle(topleft, texture, colorData, Position2D{ 0, 0 }, 0, topleftTexPos);
+		renderRectangle(topleft, texture, colorData, Position2D{0, 0}, 0, topleftTexPos);
 
 		//topright
 		Rect topright = position;
@@ -1219,7 +1243,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		toprightTexPos.y = textureCoords.y;
 		toprightTexPos.z = textureCoords.z;
 		toprightTexPos.w = inner_texture_coords.y;
-		renderRectangle(topright, texture, colorData, Position2D{ 0, 0 }, 0, toprightTexPos);
+		renderRectangle(topright, texture, colorData, Position2D{0, 0}, 0, toprightTexPos);
 
 		//bottomleft
 		Rect bottomleft = position;
@@ -1231,7 +1255,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		bottomleftTexPos.y = inner_texture_coords.w;
 		bottomleftTexPos.z = inner_texture_coords.x;
 		bottomleftTexPos.w = textureCoords.w;
-		renderRectangle(bottomleft, texture, colorData, Position2D{ 0, 0 }, 0, bottomleftTexPos);
+		renderRectangle(bottomleft, texture, colorData, Position2D{0, 0}, 0, bottomleftTexPos);
 
 		//bottomright
 		Rect bottomright = position;
@@ -1244,13 +1268,13 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		bottomrightTexPos.y = inner_texture_coords.w;
 		bottomrightTexPos.z = textureCoords.z;
 		bottomrightTexPos.w = textureCoords.w;
-		renderRectangle(bottomright, texture, colorData, Position2D{ 0, 0 }, 0, bottomrightTexPos);
+		renderRectangle(bottomright, texture, colorData, Position2D{0, 0}, 0, bottomrightTexPos);
 
 	}
 
 	void Renderer2D::render9Patch2(const Rect position, const Color4f color, const glm::vec2 origin, const float rotation, const Texture texture, const Texture_Coords textureCoords, const Texture_Coords inner_texture_coords)
 	{
-		glm::vec4 colorData[4] = { color, color, color, color };
+		glm::vec4 colorData[4] = {color, color, color, color};
 
 		int w = 0;
 		int h = 0;
@@ -1267,8 +1291,8 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		float rightBorder = (textureCoords.z - inner_texture_coords.z) / textureSpaceW * position.z;
 
 		float newAspectRatio = position.z / position.w;
-		
-		if (newAspectRatio < 1.f) 
+
+		if (newAspectRatio < 1.f)
 		{
 			topBorder *= newAspectRatio;
 			bottomBorder *= newAspectRatio;
@@ -1279,7 +1303,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			rightBorder /= newAspectRatio;
 		}
 
-	
+
 
 		//topBorder = 50;
 		//bottomBorder = -50;
@@ -1293,7 +1317,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		innerPos.y += topBorder;
 		innerPos.z -= leftBorder + rightBorder;
 		innerPos.w -= topBorder + bottomBorder;
-		renderRectangle(innerPos, texture, colorData, Position2D{ 0, 0 }, 0, inner_texture_coords);
+		renderRectangle(innerPos, texture, colorData, Position2D{0, 0}, 0, inner_texture_coords);
 
 		//top
 		Rect topPos = position;
@@ -1305,7 +1329,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		upperTexPos.y = textureCoords.y;
 		upperTexPos.z = inner_texture_coords.z;
 		upperTexPos.w = inner_texture_coords.y;
-		renderRectangle(topPos, texture, colorData, Position2D{ 0, 0 }, 0, upperTexPos);
+		renderRectangle(topPos, texture, colorData, Position2D{0, 0}, 0, upperTexPos);
 
 		//Rect topPos = position;
 		//topPos.x += leftBorder;
@@ -1348,7 +1372,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		bottomTexPos.y = inner_texture_coords.w;
 		bottomTexPos.z = inner_texture_coords.z;
 		bottomTexPos.w = textureCoords.w;
-		renderRectangle(bottom, texture, colorData, Position2D{ 0, 0 }, 0, bottomTexPos);
+		renderRectangle(bottom, texture, colorData, Position2D{0, 0}, 0, bottomTexPos);
 
 		//left
 		Rect left = position;
@@ -1360,7 +1384,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		leftTexPos.y = inner_texture_coords.y;
 		leftTexPos.z = inner_texture_coords.x;
 		leftTexPos.w = inner_texture_coords.w;
-		renderRectangle(left, texture, colorData, Position2D{ 0, 0 }, 0, leftTexPos);
+		renderRectangle(left, texture, colorData, Position2D{0, 0}, 0, leftTexPos);
 
 		//right
 		Rect right = position;
@@ -1373,7 +1397,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		rightTexPos.y = inner_texture_coords.y;
 		rightTexPos.z = textureCoords.z;
 		rightTexPos.w = inner_texture_coords.w;
-		renderRectangle(right, texture, colorData, Position2D{ 0, 0 }, 0, rightTexPos);
+		renderRectangle(right, texture, colorData, Position2D{0, 0}, 0, rightTexPos);
 
 		//topleft
 		Rect topleft = position;
@@ -1384,7 +1408,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		topleftTexPos.y = textureCoords.y;
 		topleftTexPos.z = inner_texture_coords.x;
 		topleftTexPos.w = inner_texture_coords.y;
-		renderRectangle(topleft, texture, colorData, Position2D{ 0, 0 }, 0, topleftTexPos);
+		renderRectangle(topleft, texture, colorData, Position2D{0, 0}, 0, topleftTexPos);
 		//repair here?
 
 
@@ -1398,7 +1422,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		toprightTexPos.y = textureCoords.y;
 		toprightTexPos.z = textureCoords.z;
 		toprightTexPos.w = inner_texture_coords.y;
-		renderRectangle(topright, texture, colorData, Position2D{ 0, 0 }, 0, toprightTexPos);
+		renderRectangle(topright, texture, colorData, Position2D{0, 0}, 0, toprightTexPos);
 
 		//bottomleft
 		Rect bottomleft = position;
@@ -1410,7 +1434,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		bottomleftTexPos.y = inner_texture_coords.w;
 		bottomleftTexPos.z = inner_texture_coords.x;
 		bottomleftTexPos.w = textureCoords.w;
-		renderRectangle(bottomleft, texture, colorData, Position2D{ 0, 0 }, 0, bottomleftTexPos);
+		renderRectangle(bottomleft, texture, colorData, Position2D{0, 0}, 0, bottomleftTexPos);
 
 		//bottomright
 		Rect bottomright = position;
@@ -1423,7 +1447,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		bottomrightTexPos.y = inner_texture_coords.w;
 		bottomrightTexPos.z = textureCoords.z;
 		bottomrightTexPos.w = textureCoords.w;
-		renderRectangle(bottomright, texture, colorData, Position2D{ 0, 0 }, 0, bottomrightTexPos);
+		renderRectangle(bottomright, texture, colorData, Position2D{0, 0}, 0, bottomrightTexPos);
 
 	}
 
@@ -1451,15 +1475,15 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		glBindBuffer(GL_ARRAY_BUFFER, buffers[Renderer2DBufferType::quadPositions]);
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, buffers[Renderer2DBufferType::quadColors]);
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
 		glBindBuffer(GL_ARRAY_BUFFER, buffers[Renderer2DBufferType::texturePositions]);
 		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
 
 		glBindVertexArray(0);
 	}
@@ -1516,7 +1540,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 	{
 		auto rect = glm::vec4{0, 0, windowW, windowH};
 
-		glm::mat3 mat = 
+		glm::mat3 mat =
 		{1.f, 0, currentCamera.position.x ,
 		 0, 1.f, currentCamera.position.y,
 		 0, 0, 1.f};
@@ -1527,26 +1551,26 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		pos1 = mat * pos1;
 		pos2 = mat * pos2;
-		
+
 		glm::vec2 point((pos1.x + pos2.x) / 2.f, (pos1.y + pos2.y) / 2.f);
 
-		pos1 = glm::vec3(scaleAroundPoint(pos1, point, 1.f/currentCamera.zoom), 1.f);
-		pos2 = glm::vec3(scaleAroundPoint(pos2, point, 1.f/currentCamera.zoom), 1.f);
+		pos1 = glm::vec3(scaleAroundPoint(pos1, point, 1.f / currentCamera.zoom), 1.f);
+		pos2 = glm::vec3(scaleAroundPoint(pos2, point, 1.f / currentCamera.zoom), 1.f);
 
 		rect = {pos1.x, pos1.y, pos2.x - pos1.x, pos2.y - pos1.y};
 
 		return rect;
 	}
 
-	glm::vec4 Renderer2D::toScreen(const glm::vec4& transform)
+	glm::vec4 Renderer2D::toScreen(const glm::vec4 &transform)
 	{
 		//We need to flip texture_transforms.y
 		const float transformsY = transform.y * -1;
 
-		glm::vec2 v1 = { transform.x,				  transformsY };
-		glm::vec2 v2 = { transform.x,				  transformsY - transform.w };
-		glm::vec2 v3 = { transform.x + transform.z, transformsY - transform.w };
-		glm::vec2 v4 = { transform.x + transform.z, transformsY };
+		glm::vec2 v1 = {transform.x,				  transformsY};
+		glm::vec2 v2 = {transform.x,				  transformsY - transform.w};
+		glm::vec2 v3 = {transform.x + transform.z, transformsY - transform.w};
+		glm::vec2 v4 = {transform.x + transform.z, transformsY};
 
 		//Apply camera transformations
 		v1.x -= currentCamera.position.x;
@@ -1579,13 +1603,15 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 	}
 
 	glm::vec2 Renderer2D::getTextSize(const char *text, const Font font,
-		const float size, const float spacing, const float line_space)
+		const float sizePixels, const float spacing, const float line_space)
 	{
 		if (font.texture.id == 0)
 		{
 			errorFunc("Missing font", userDefinedData);
 			return {};
 		}
+
+		float size = sizePixels / 64.f;
 
 		glm::vec2 position = {};
 
@@ -1594,10 +1620,15 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		rectangle.x = position.x;
 		float linePositionY = position.y;
 
+		if (text_length == 0) { return {}; }
+
 		//This is the y position we render at because it advances when we encounter newlines
 		float maxPos = 0;
 		float maxPosY = 0;
 		float bonusY = 0;
+		int lineCount = 1;
+		bool firstLine = true;
+		float firstLineSize = 0;
 
 		for (int i = 0; i < text_length; i++)
 		{
@@ -1607,22 +1638,20 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 				linePositionY += (font.max_height + line_space) * size;
 				bonusY += (font.max_height + line_space) * size;
 				maxPosY = 0;
+				lineCount++;
+				firstLine = false;
 			}
 			else if (text[i] == '\t')
 			{
-				const stbtt_aligned_quad quad = internal::fontGetGlyphQuad
-				(font, '_');
-				auto x = quad.x1 - quad.x0;
-
-				rectangle.x += x * size * 3 + spacing * size;
+				float x = font.max_height;
+				rectangle.x += (x + spacing) * size * 3;
 			}
 			else if (text[i] == ' ')
 			{
-				const stbtt_aligned_quad quad = internal::fontGetGlyphQuad
-				(font, '_');
-				auto x = quad.x1 - quad.x0;
+				rectangle.x += (font.spaceSize + spacing) * size;
 
-				rectangle.x += x * size + spacing * size;
+				//float x = font.max_height;
+				//rectangle.x += x * size + spacing * size;
 			}
 			else if (text[i] >= ' ' && text[i] <= '~')
 			{
@@ -1632,12 +1661,25 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 				rectangle.z = quad.x1 - quad.x0;
 				rectangle.w = quad.y1 - quad.y0;
 
+				if (firstLine && rectangle.w > firstLineSize)
+				{
+					firstLineSize = rectangle.w;
+				}
+
 				rectangle.z *= size;
 				rectangle.w *= size;
 
-				rectangle.y = linePositionY + quad.y0 * size;
+				rectangle.y = linePositionY + quad.y0 * size; //not needed
 
-				rectangle.x += rectangle.z + spacing * size;
+				if (font.monospaced)
+				{
+					rectangle.x += font.max_height + spacing * size;
+				}
+				else
+				{
+					rectangle.x += rectangle.z + spacing * size;
+				}
+
 
 				maxPosY = std::max(maxPosY, rectangle.y);
 				maxPos = std::max(maxPos, rectangle.x);
@@ -1652,6 +1694,9 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		float paddY = maxPosY;
 
 		paddY += font.max_height * size + bonusY;
+
+		//paddY = ((lineCount-1) * font.max_height + (lineCount - 1) * line_space + firstLineSize) * size;
+		paddY = ((lineCount)*font.max_height + (lineCount - 1) * line_space) * size;
 
 		return glm::vec2{paddX, paddY};
 
@@ -1674,7 +1719,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		{
 			if (ratioX < ratioY)
 			{
-				return maxSize*ratioX;
+				return maxSize * ratioX;
 			}
 			else
 			{
@@ -1706,11 +1751,11 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		}
 		else
 		{
-			
+
 		}
 
 		return minSize;
-	
+
 	}
 
 	float Renderer2D::determineTextRescaleFit(const std::string &str,
@@ -1844,11 +1889,14 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 	}
 
 	void Renderer2D::renderText(glm::vec2 position, const char *text, const Font font,
-		const Color4f color, const float size, const float spacing, const float line_space, bool showInCenter,
+		const Color4f color, const float sizePixels, const float spacing, const float line_space, bool showInCenter,
 		const Color4f ShadowColor
 		, const Color4f LightColor
 	)
 	{
+
+		float size = sizePixels / 64.f;
+
 		if (font.texture.id == 0)
 		{
 			errorFunc("Missing font", userDefinedData);
@@ -1862,68 +1910,11 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		if (showInCenter)
 		{
-			auto textSize = this->getTextSize(text, font, size, spacing, line_space);
+			auto textSize = this->getTextSize(text, font, sizePixels, spacing, line_space);
 
 			position.x -= textSize.x / 2.f;
-			position.y += textSize.y / 2.f;
-		}
-
-		if (0)
-		{
-			//This is the y position we render at because it advances when we encounter newlines
-
-			float maxPos = 0;
-			float maxPosY = 0;
-
-			for (int i = 0; i < text_length; i++)
-			{
-				if (text[i] == '\n')
-				{
-					rectangle.x = position.x;
-					linePositionY += (font.max_height + line_space) * size;
-				}
-				else if (text[i] == '\t')
-				{
-					const stbtt_aligned_quad quad = internal::fontGetGlyphQuad
-					(font, '_');
-					auto x = quad.x1 - quad.x0;
-
-					rectangle.x += x * size * 3 + spacing * size;
-				}
-				else if (text[i] == ' ')
-				{
-					const stbtt_aligned_quad quad = internal::fontGetGlyphQuad
-					(font, '_');
-					auto x = quad.x1 - quad.x0;
-
-					rectangle.x += x * size + spacing * size;
-				}
-				else if (text[i] >= ' ' && text[i] <= '~')
-				{
-					const stbtt_aligned_quad quad = internal::fontGetGlyphQuad
-					(font, text[i]);
-
-					rectangle.z = quad.x1 - quad.x0;
-					rectangle.w = quad.y1 - quad.y0;
-
-					rectangle.z *= size;
-					rectangle.w *= size;
-
-					rectangle.y = linePositionY + quad.y0 * size;
-
-
-					rectangle.x += rectangle.z + spacing * size;
-					maxPos = std::max(maxPos, rectangle.x);
-					maxPosY = std::max(maxPosY, rectangle.y);
-				}
-			}
-
-			float padd = maxPos - position.x;
-			padd /= 2;
-			position.x -= padd;
-
-			float paddY = maxPosY - position.y;
-			position.y -= paddY;
+			position.y -= textSize.y / 2.f;
+			position.y += (font.max_height * size / 2.f) * 1.5f;
 		}
 
 		rectangle = {};
@@ -1941,18 +1932,15 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			}
 			else if (text[i] == '\t')
 			{
-				const stbtt_aligned_quad quad = internal::fontGetGlyphQuad
-				(font, '_');
-				auto x = quad.x1 - quad.x0;
-
-				rectangle.x += x * size * 3 + spacing * size;
+				float x = font.max_height;
+				rectangle.x += (x + spacing) * size * 3;
 			}
 			else if (text[i] == ' ')
 			{
-				const stbtt_aligned_quad quad = internal::fontGetGlyphQuad
-				(font, '_');
-				auto x = quad.x1 - quad.x0;
-				rectangle.x += x * size + spacing * size;
+				rectangle.x += (font.spaceSize + spacing) * size;
+
+				//float x = font.max_height;
+				//rectangle.x += x * size + spacing * size;
 			}
 			else if (text[i] >= ' ' && text[i] <= '~')
 			{
@@ -1995,8 +1983,15 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 				}
 
+				if (font.monospaced)
+				{
+					rectangle.x += font.max_height + spacing * size;
+				}
+				else
+				{
+					rectangle.x += rectangle.z + spacing * size;
+				}
 
-				rectangle.x += rectangle.z + spacing * size;
 			}
 		}
 	}
@@ -2027,17 +2022,17 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 	void Renderer2D::clearScreen(const Color4f color)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, defaultFBO);
-	
-		#if GL2D_USE_OPENGL_130
-			GLfloat oldColor[4];
-			glGetFloatv(GL_COLOR_CLEAR_VALUE, oldColor);
 
-			glClearColor(color.r, color.g, color.b, color.a);
-			glClear(GL_COLOR_BUFFER_BIT);
-			glClearColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]);
-		#else
-			glClearBufferfv(GL_COLOR, 0, &color[0]);
-		#endif
+	#if GL2D_USE_OPENGL_130
+		GLfloat oldColor[4];
+		glGetFloatv(GL_COLOR_CLEAR_VALUE, oldColor);
+
+		glClearColor(color.r, color.g, color.b, color.a);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClearColor(oldColor[0], oldColor[1], oldColor[2], oldColor[3]);
+	#else
+		glClearBufferfv(GL_COLOR, 0, &color[0]);
+	#endif
 
 	}
 
@@ -2057,7 +2052,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		currentShader = defaultShader;
 	}
 
-	void Renderer2D::renderPostProcess(ShaderProgram shader, 
+	void Renderer2D::renderPostProcess(ShaderProgram shader,
 		Texture input, FrameBuffer result)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, result.fbo);
@@ -2100,7 +2095,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		glBindVertexArray(0);
 
-	
+
 	}
 
 #pragma endregion
@@ -2114,8 +2109,8 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		return s;
 	}
 
-	void Texture::createFromBuffer(const char* image_data, const int width, const int height
-		,bool pixelated, bool useMipMaps)
+	void Texture::createFromBuffer(const char *image_data, const int width, const int height
+		, bool pixelated, bool useMipMaps)
 	{
 		GLuint id = 0;
 
@@ -2130,13 +2125,13 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 			}
-			else 
+			else
 			{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 			}
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		}
-		else 
+		else
 		{
 			if (useMipMaps)
 			{
@@ -2159,7 +2154,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		this->id = id;
 	}
 
-	void Texture::create1PxSquare(const char* b)
+	void Texture::create1PxSquare(const char *b)
 	{
 		if (b == nullptr)
 		{
@@ -2171,7 +2166,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 				0xff
 			};
 
-			createFromBuffer((char*)buff, 1, 1);
+			createFromBuffer((char *)buff, 1, 1);
 		}
 		else
 		{
@@ -2180,8 +2175,8 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 	}
 
-	void Texture::createFromFileData(const unsigned char* image_file_data, const size_t image_file_size
-		,bool pixelated, bool useMipMaps)
+	void Texture::createFromFileData(const unsigned char *image_file_data, const size_t image_file_size
+		, bool pixelated, bool useMipMaps)
 	{
 		stbi_set_flip_vertically_on_load(true);
 
@@ -2189,14 +2184,14 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		int height = 0;
 		int channels = 0;
 
-		const unsigned char* decodedImage = stbi_load_from_memory(image_file_data, (int)image_file_size, &width, &height, &channels, 4);
+		const unsigned char *decodedImage = stbi_load_from_memory(image_file_data, (int)image_file_size, &width, &height, &channels, 4);
 
-		createFromBuffer((const char*)decodedImage, width, height, pixelated, useMipMaps);
+		createFromBuffer((const char *)decodedImage, width, height, pixelated, useMipMaps);
 
 		STBI_FREE(decodedImage);
 	}
 
-	void Texture::createFromFileDataWithPixelPadding(const unsigned char* image_file_data, const size_t image_file_size, int blockSize,
+	void Texture::createFromFileDataWithPixelPadding(const unsigned char *image_file_data, const size_t image_file_size, int blockSize,
 		bool pixelated, bool useMipMaps)
 	{
 		stbi_set_flip_vertically_on_load(true);
@@ -2205,7 +2200,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		int height = 0;
 		int channels = 0;
 
-		const unsigned char* decodedImage = stbi_load_from_memory(image_file_data, (int)image_file_size, &width, &height, &channels, 4);
+		const unsigned char *decodedImage = stbi_load_from_memory(image_file_data, (int)image_file_size, &width, &height, &channels, 4);
 
 		int newW = width + ((width * 2) / blockSize);
 		int newH = height + ((height * 2) / blockSize);
@@ -2216,7 +2211,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		};
 
 
-		unsigned char* newData = new unsigned char[newW * newH * 4]{};
+		unsigned char *newData = new unsigned char[newW * newH * 4] {};
 
 		auto getNew = [newData, newW](int x, int y, int c)
 		{
@@ -2244,11 +2239,11 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 					yNo ||
 
 					((
-						x == 0 || x == newW - 1
-						|| (x % (blockSize + 2)) == 0 ||
-						((x + 1) % (blockSize + 2)) == 0
-						)
-						)
+					x == 0 || x == newW - 1
+					|| (x % (blockSize + 2)) == 0 ||
+					((x + 1) % (blockSize + 2)) == 0
+					)
+					)
 
 					)
 				{
@@ -2333,19 +2328,19 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		}
 
-		createFromBuffer((const char*)newData, newW, newH, pixelated, useMipMaps);
+		createFromBuffer((const char *)newData, newW, newH, pixelated, useMipMaps);
 
 		STBI_FREE(decodedImage);
 		delete[] newData;
 	}
 
-	void Texture::loadFromFile(const char* fileName, bool pixelated, bool useMipMaps)
+	void Texture::loadFromFile(const char *fileName, bool pixelated, bool useMipMaps)
 	{
 		std::ifstream file(fileName, std::ios::binary);
 
 		if (!file.is_open())
 		{
-			char c[300] = { 0 };
+			char c[300] = {0};
 			strcat(c, "error openning: ");
 			strcat(c + strlen(c), fileName);
 			errorFunc(c, userDefinedData);
@@ -2356,8 +2351,8 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		file.seekg(0, std::ios::end);
 		fileSize = (int)file.tellg();
 		file.seekg(0, std::ios::beg);
-		unsigned char* fileData = new unsigned char[fileSize];
-		file.read((char*)fileData, fileSize);
+		unsigned char *fileData = new unsigned char[fileSize];
+		file.read((char *)fileData, fileSize);
 		file.close();
 
 		createFromFileData(fileData, fileSize, pixelated, useMipMaps);
@@ -2366,14 +2361,14 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 	}
 
-	void Texture::loadFromFileWithPixelPadding(const char* fileName, int blockSize,
+	void Texture::loadFromFileWithPixelPadding(const char *fileName, int blockSize,
 		bool pixelated, bool useMipMaps)
 	{
 		std::ifstream file(fileName, std::ios::binary);
 
 		if (!file.is_open())
 		{
-			char c[300] = { 0 };
+			char c[300] = {0};
 			strcat(c, "error openning: ");
 			strcat(c + strlen(c), fileName);
 			errorFunc(c, userDefinedData);
@@ -2384,8 +2379,8 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		file.seekg(0, std::ios::end);
 		fileSize = (int)file.tellg();
 		file.seekg(0, std::ios::beg);
-		unsigned char* fileData = new unsigned char[fileSize];
-		file.read((char*)fileData, fileSize);
+		unsigned char *fileData = new unsigned char[fileSize];
+		file.read((char *)fileData, fileSize);
 		file.close();
 
 		createFromFileDataWithPixelPadding(fileData, fileSize, blockSize, pixelated, useMipMaps);
@@ -2407,7 +2402,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, mipLevel, GL_TEXTURE_WIDTH, &outSize->x);
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, mipLevel, GL_TEXTURE_HEIGHT, &outSize->y);
-		
+
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		return outSize->x * outSize->y * 4;
@@ -2517,7 +2512,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		}
 	}
 
-	glm::vec2 internal::convertPoint(const Camera &camera, const glm::vec2& p, float windowW, float windowH)
+	glm::vec2 internal::convertPoint(const Camera &camera, const glm::vec2 &p, float windowW, float windowH)
 	{
 		glm::vec2 r = p;
 
@@ -2527,7 +2522,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		r.y += camera.position.y;
 
 		{
-			glm::vec2 cameraCenter = { camera.position.x + windowW / 2, -camera.position.y - windowH / 2 };
+			glm::vec2 cameraCenter = {camera.position.x + windowW / 2, -camera.position.y - windowH / 2};
 
 			r = rotateAroundPoint(r,
 				cameraCenter,
@@ -2535,7 +2530,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		}
 
 		{
-			glm::vec2 cameraCenter = { camera.position.x + windowW / 2, camera.position.y + windowH / 2 };
+			glm::vec2 cameraCenter = {camera.position.x + windowW / 2, camera.position.y + windowH / 2};
 
 			r = scaleAroundPoint(r,
 				cameraCenter,
@@ -2565,8 +2560,14 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		return r;
 	}
 
-	void FrameBuffer::create(unsigned int w, unsigned int h)
+	void FrameBuffer::create(unsigned int w, unsigned int h, bool hasDepth, bool nearestFilter)
 	{
+		this->w = w;
+		this->h = h;
+
+		auto filter = GL_LINEAR;
+		if (nearestFilter) { filter = GL_NEAREST; }
+
 		glGenFramebuffers(1, &fbo);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -2575,21 +2576,22 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.id, 0);
 
-		//glDrawBuffer(GL_COLOR_ATTACHMENT0); //todo why is this commented out ?
+		if (hasDepth)
+		{
+			glGenTextures(1, &depthTexture.id); //todo add depth stuff
+			glBindTexture(GL_TEXTURE_2D, depthTexture.id);
 
-		//glGenTextures(1, &depthtTexture);
-		//glBindTexture(GL_TEXTURE_2D, depthtTexture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, w, h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr);
 
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, w, h, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthtTexture, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture.id, 0);
+		}
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -2598,11 +2600,23 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 	void FrameBuffer::resize(unsigned int w, unsigned int h)
 	{
-		glBindTexture(GL_TEXTURE_2D, texture.id);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-		//glBindTexture(GL_TEXTURE_2D, depthtTexture);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		if (this->w != w || this->h != h)
+		{
+			this->w = w;
+			this->h = h;
+
+			glBindTexture(GL_TEXTURE_2D, texture.id);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+			if (depthTexture.id)
+			{
+				glBindTexture(GL_TEXTURE_2D, depthTexture.id);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+			}
+
+			glBindTexture(GL_TEXTURE_2D, 0);
+		}
 
 	}
 
@@ -2614,14 +2628,8 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 			fbo = 0;
 		}
 
-		if (texture.id)
-		{
-			glDeleteTextures(1, &texture.id);
-			texture = {};
-		}
-
-		//glDeleteTextures(1, &depthtTexture);
-		//depthtTexture = 0;
+		texture.cleanup();
+		depthTexture.cleanup();
 	}
 
 	void FrameBuffer::clear()
@@ -2642,11 +2650,11 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 
 		if (flip)
 		{
-			return { (x + 1) * xSize, 1 - (y * ySize), (x)*xSize, 1.f - ((y + 1) * ySize) };
+			return {(x + 1) * xSize, 1 - (y * ySize), (x)*xSize, 1.f - ((y + 1) * ySize)};
 		}
 		else
 		{
-			return { x * xSize, 1 - (y * ySize), (x + 1) * xSize, 1.f - ((y + 1) * ySize) };
+			return {x * xSize, 1 - (y * ySize), (x + 1) * xSize, 1.f - ((y + 1) * ySize)};
 		}
 
 	}
@@ -2660,11 +2668,11 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		float Xpadding = 1.f / mapXsize;
 		float Ypadding = 1.f / mapYsize;
 
-		glm::vec4 noFlip = { x * xSize + Xpadding, 1 - (y * ySize) - Ypadding, (x + 1) * xSize - Xpadding, 1.f - ((y + 1) * ySize) + Ypadding };
+		glm::vec4 noFlip = {x * xSize + Xpadding, 1 - (y * ySize) - Ypadding, (x + 1) * xSize - Xpadding, 1.f - ((y + 1) * ySize) + Ypadding};
 
 		if (flip)
 		{
-			glm::vec4 flip = { noFlip.z, noFlip.y, noFlip.x, noFlip.w };
+			glm::vec4 flip = {noFlip.z, noFlip.y, noFlip.x, noFlip.w};
 
 			return flip;
 		}
@@ -2674,7 +2682,7 @@ or gladLoadGLLoader() or glewInit()?", userDefinedData);
 		}
 	}
 
-	
+
 
 
 }

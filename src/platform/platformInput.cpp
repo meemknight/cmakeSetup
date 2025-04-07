@@ -1,11 +1,27 @@
 #include "platformInput.h"
+#include "gameLayer.h"
 
 platform::Button keyBoard[platform::Button::BUTTONS_COUNT];
 platform::Button leftMouse;
 platform::Button rightMouse;
 
-platform::ControllerButtons controllerButtons;
+platform::Controller controllerButtons;
 std::string typedInput;
+
+platform::Button *platform::getAllButtons()
+{
+	return keyBoard;
+}
+
+platform::Button &platform::getLMouseButton()
+{
+	return leftMouse;
+}
+
+platform::Button &platform::getRMouseButton()
+{
+	return rightMouse;
+}
 
 int platform::isButtonHeld(int key)
 {
@@ -14,7 +30,7 @@ int platform::isButtonHeld(int key)
 	return keyBoard[key].held;
 }
 
-int platform::isButtonPressedOn(int key)
+int platform::isButtonPressed(int key)
 {
 	if (key < Button::A || key >= Button::BUTTONS_COUNT) { return 0; }
 
@@ -66,9 +82,9 @@ int platform::isRMouseHeld()
 	return rightMouse.held;
 }
 
-platform::ControllerButtons platform::getControllerButtons()
+platform::Controller platform::getControllerButtons()
 {
-	return platform::isFocused() ? controllerButtons : platform::ControllerButtons{};
+	return platform::hasFocused() ? controllerButtons : platform::Controller{};
 }
 
 std::string platform::getTypedInput()

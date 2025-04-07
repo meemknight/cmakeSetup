@@ -40,7 +40,7 @@ bool initGame()
 //YOU HAVE TO CHANGE A FLAG IN THE CMAKE SO THAT RESOURCES_PATH POINTS TO RELATIVE PATHS
 //BECAUSE OF SOME CMAKE PROGBLMS, RESOURCES_PATH IS SET TO BE ABSOLUTE DURING PRODUCTION FOR MAKING IT EASIER.
 
-bool gameLogic(float deltaTime)
+bool gameLogic(float deltaTime, platform::Input &input)
 {
 #pragma region init stuff
 	int w = 0; int h = 0;
@@ -53,20 +53,21 @@ bool gameLogic(float deltaTime)
 	renderer.updateWindowMetrics(w, h);
 #pragma endregion
 
+	//you can also do platform::isButtonHeld(platform::Button::Left)
 
-	if (platform::isButtonHeld(platform::Button::Left))
+	if (input.isButtonHeld(platform::Button::Left))
 	{
 		gameData.rectPos.x -= deltaTime * 100;
 	}
-	if (platform::isButtonHeld(platform::Button::Right))
+	if (input.isButtonHeld(platform::Button::Right))
 	{
 		gameData.rectPos.x += deltaTime * 100;
 	}
-	if (platform::isButtonHeld(platform::Button::Up))
+	if (input.isButtonHeld(platform::Button::Up))
 	{
 		gameData.rectPos.y -= deltaTime * 100;
 	}
-	if (platform::isButtonHeld(platform::Button::Down))
+	if (input.isButtonHeld(platform::Button::Down))
 	{
 		gameData.rectPos.y += deltaTime * 100;
 	}
