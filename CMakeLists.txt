@@ -12,8 +12,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(PRODUCTION_BUILD OFF CACHE BOOL "Make this a production build" FORCE)
 #delete the out folder after changing if visual studio doesn recognize the change!
 
-
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 
