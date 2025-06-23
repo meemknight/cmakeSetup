@@ -4,7 +4,7 @@ void toLower(char *dest, const char *source, size_t size)
 {
 	for (int i = 0; i < size; i++)
 	{
-		if (dest[i] == 0) { break; }
+		if (source[i] == 0) { break; }
 		dest[i] = std::tolower(source[i]);
 	}
 }
