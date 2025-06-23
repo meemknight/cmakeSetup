@@ -402,6 +402,8 @@ namespace platform
 
 
 };
+
+
 #pragma endregion
 
 
@@ -597,7 +599,7 @@ int main()
 
 		platform::Input input = {};
 
-		input.deltaTime = deltaTime;
+		input.deltaTime = augmentedDeltaTime;
 		input.hasFocus = platform::hasFocused();
 		memcpy(input.buttons, platform::getAllButtons(), sizeof(input.buttons));
 		input.controller = platform::getControllerButtons();
