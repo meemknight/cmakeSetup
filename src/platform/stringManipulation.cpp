@@ -13,7 +13,7 @@ void toUpper(char *dest, const char *source, size_t size)
 {
 	for (int i = 0; i < size; i++)
 	{
-		if (dest[i] == 0) { break; }
+		if (source[i] == 0) { break; }
 		dest[i] = std::toupper(source[i]);
 	}
 }
@@ -34,6 +34,7 @@ bool findChar(const char *source, char c)
 
 size_t strlcpy(char *dst, const char *src, size_t size)
 {
+	if (size == 0) { return 0; }
 
 	for (size_t i = 0; i < size - 1; i++)
 	{
