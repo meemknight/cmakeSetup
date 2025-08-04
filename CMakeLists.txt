@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 
 #! ! ! ! ! ! !
-#set this to true to ship the game!
+#set this to ON instead of OFF to ship the game!
 #basically this will change the RESOURCES_PATH to be the local path
 #! ! ! ! ! ! !
 set(PRODUCTION_BUILD OFF CACHE BOOL "Make this a production build" FORCE)
