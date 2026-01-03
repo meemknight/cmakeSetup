@@ -4,6 +4,7 @@
 //  add enet in the target_link_libraries list at the end
 //#include <enet/enet.h>
 
+#define WINDOW_NAME "geam"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -438,7 +439,7 @@ int main()
 
 	int w = 500;
 	int h = 500;
-	wind = glfwCreateWindow(w, h, "geam", nullptr, nullptr);
+	wind = glfwCreateWindow(w, h, WINDOW_NAME, nullptr, nullptr);
 	glfwMakeContextCurrent(wind);
 	glfwSwapInterval(1);
 
