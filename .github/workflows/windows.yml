@@ -1,0 +1,20 @@
+name: windows
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build with cmake
+        run: |
+          mkdir build/
+          cd build/
+          cmake -DPRODUCTION_BUILD=ON ..
+          cmake --build .

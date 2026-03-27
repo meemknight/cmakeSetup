@@ -1,0 +1,23 @@
+name: ubuntu
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install packages
+      run:  |
+        sudo apt-get update
+        sudo apt-get install cmake g++ libglew-dev libglfw3-dev libglm-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+    - name: Build with cmake
+      run: |
+        mkdir build
+        cd build
+        cmake -DPRODUCTION_BUILD=ON ..
+        cmake --build .
